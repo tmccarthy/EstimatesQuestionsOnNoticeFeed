@@ -4,51 +4,69 @@ import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+import au.id.tmm.estimatesqon.utils.StringUtils
+import StringUtils.InstanceStringUtils
 import au.id.tmm.estimatesqon.model.{Answer, Estimates}
 import net.ruippeixotog.scalascraper.browser.Browser
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
-import net.ruippeixotog.scalascraper.dsl.DSL.Parse._
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.{Document, Element}
 import org.jsoup.select.Elements
 
-import scala.collection.immutable.SortedSet
 import scala.io.Source
 
 class EstimatesScraper protected (val estimates: Estimates) {
 
-  val dateParsingPattern: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-  def extractAnswers(page: Source): SortedSet[Answer] = {
+  def extractAnswers(page: Source): Seq[Answer] = {
     val htmlAsString: String = page.getLines().fold("")((left, right) => left + "\n" + right)
 
     val browser: Browser = new Browser
     val document: Document = browser.parseString(htmlAsString)
 
-    val h3Elements: Elements = document >> elements("h3")
-    val questionsOnNoticeHeading: Element = h3Elements.filter(_.text.trim == "Answers to Questions on Notice").head
+    val questionsOnNoticeTable: Option[Element] = findQuestionsOnNoticeTable(document)
 
-    val questionsOnNoticeHeadingIndex: Int = document.getAllElements.indexOf(questionsOnNoticeHeading)
+    if (questionsOnNoticeTable.isEmpty) return Seq.empty
 
-    val questionsOnNoticeTable: Element = document.getAllElements.get(questionsOnNoticeHeadingIndex + 1)
+    val tableRows: Elements = questionsOnNoticeTable.get.children.first.children
 
-    val rows: Elements = questionsOnNoticeTable.children.first.children
+    val answers: Seq[Answer] = answersFromTableRows(tableRows)
 
-    val answers: Stream[Answer] = rows.flatMap(answerFromRow).toStream
-
-    SortedSet(answers: _*)
+    answers
   }
 
-  def answerFromRow(questionsOnNoticeTableRow: Element): Option[Answer] = {
+  private def findQuestionsOnNoticeTable(document: Document): Option[Element] = {
+    val h3Elements: Elements = document >> elements("h3")
+    val questionsOnNoticeHeading = h3Elements.find(_.text.containsAnyIgnoreCase("Answers to Questions on Notice", "Questions on notice"))
 
-    if (isHeaderRow(questionsOnNoticeTableRow)) return None
+    val allElements: Elements = document.getAllElements
 
-    val qonNumber: Int = extractQONNumber(questionsOnNoticeTableRow)
-    val divisionOrAgency: String = extractDivisionOrAgency(questionsOnNoticeTableRow)
-    val senator: String = extractSenator(questionsOnNoticeTableRow)
-    val topic: String = extractTopic(questionsOnNoticeTableRow)
-    val pdfs: Seq[URL] = extractPDFs(questionsOnNoticeTableRow)
-    val date: Seq[LocalDate] = extractDates(questionsOnNoticeTableRow)
+    val qONHeadingElementIndex = questionsOnNoticeHeading.map(allElements.indexOf(_))
+
+    val elementsAfterQONHeading: Option[Stream[Element]] = qONHeadingElementIndex.map(allElements.drop(_).toStream)
+
+    val questionsOnNoticeTable: Option[Element] = elementsAfterQONHeading.flatMap(elements => elements.find(_.tagName() == "table"))
+    questionsOnNoticeTable
+  }
+
+  private def answersFromTableRows(tableRows: Elements): Seq[Answer] = {
+    val headerRow: Element = tableRows.head
+    val answerColumnInfo: AnswerColumnInfo = AnswerColumnInfo.determineFromHeaderRow(headerRow)
+
+    val contentRows = tableRows.drop(1)
+
+    val answers: Stream[Answer] = contentRows.map(answerFromContentRow(answerColumnInfo, _)).toStream
+
+    answers
+  }
+
+  private def answerFromContentRow(answerColumnInfo: AnswerColumnInfo, questionsOnNoticeTableRow: Element): Answer = {
+
+    val qonNumber: Option[String] = answerColumnInfo.extractQONNumber(questionsOnNoticeTableRow)
+    val divisionOrAgency: Option[String] = answerColumnInfo.extractDivisionOrAgency(questionsOnNoticeTableRow)
+    val senator: Option[String] = answerColumnInfo.extractSenator(questionsOnNoticeTableRow)
+    val topic: Option[String] = answerColumnInfo.extractTopic(questionsOnNoticeTableRow)
+    val pdfs: Seq[URL] = answerColumnInfo.extractPDFs(questionsOnNoticeTableRow).getOrElse(Seq.empty)
+    val date: Seq[LocalDate] = answerColumnInfo.extractDates(questionsOnNoticeTableRow).getOrElse(Seq.empty)
 
     val returnedAnswer: Answer = Answer.create(
       estimates,
@@ -59,70 +77,7 @@ class EstimatesScraper protected (val estimates: Estimates) {
       pdfs,
       date)
 
-    Option.apply(returnedAnswer)
-  }
-
-  def isHeaderRow(questionsOnNoticeTableRow: Element): Boolean = {
-    val firstColumnOnThisRow: String = questionsOnNoticeTableRow.children.first.tagName.toLowerCase.trim
-
-    val isHeaderRow: Boolean = firstColumnOnThisRow == "th"
-    isHeaderRow
-  }
-
-  def extractQONNumber(questionsOnNoticeTableRow: Element): Int = {
-    val qonNumberRow: Element = questionsOnNoticeTableRow.child(0)
-    val qonNumber: Int = qonNumberRow.text.toInt
-    qonNumber
-  }
-
-  def extractDivisionOrAgency(questionsOnNoticeTableRow: Element): String = {
-    val divisionOrAgencyRow: Element = questionsOnNoticeTableRow.child(1)
-    val divisionOrAgency: String = divisionOrAgencyRow.text.trim
-    divisionOrAgency
-  }
-
-  def extractSenator(questionsOnNoticeTableRow: Element): String = {
-    val senatorRow: Element = questionsOnNoticeTableRow.child(2)
-    val senator: String = senatorRow.text.trim
-    senator
-  }
-
-  def extractTopic(questionsOnNoticeTableRow: Element): String = {
-    val topicRow: Element = questionsOnNoticeTableRow.child(3)
-    val topic: String = topicRow.text.trim
-    topic
-  }
-
-  def extractPDFs(questionsOnNoticeTableRow: Element): Seq[URL] = {
-    val pdfsRow: Element = questionsOnNoticeTableRow.child(5)
-
-    val linkElements: List[Element] = pdfsRow.children().filter(_.tagName == "a").toList
-
-    val pdfs: Seq[URL] = linkElements.flatMap(pdfLinkFromLinkElement).toSeq
-
-    pdfs
-  }
-
-  def pdfLinkFromLinkElement(linkElement: Element): Option[URL] = {
-    Option.apply(linkElement.attr("href"))
-      .filter(_.endsWith(".pdf"))
-      .map(linkString => new URL("http://www.aph.gov.au" + linkString))
-  }
-
-  def extractDates(questionsOnNoticeTableRow: Element): Seq[LocalDate] = {
-    val dateRow: Element = questionsOnNoticeTableRow.child(6)
-    val dateText: String = dateRow.text.trim.replaceAll("\u00a0", "")
-
-    if (dateText.isEmpty) {
-      Seq.empty
-    } else {
-
-      val dateStrings: Stream[String] = dateText.split("&").toStream
-
-      val dates: Stream[LocalDate] = dateStrings.map(dateString => LocalDate.parse(dateString.trim, dateParsingPattern))
-
-      dates.toSeq
-    }
+    returnedAnswer
   }
 }
 

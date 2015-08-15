@@ -19,7 +19,7 @@ class EstimatesSpec extends FreeSpec {
     "should have the description 'Budget Estimates'" in {
       assert("Budget Estimates" === estimates.description)
     }
-    
+
     "should have the hearing dates of the 27th and 28th of May 2015" in {
       assert(hearingDates === estimates.hearingDates)
     }
