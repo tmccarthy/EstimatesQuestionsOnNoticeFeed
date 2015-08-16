@@ -8,7 +8,7 @@ class SocialServicesEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
   portfolioName = "Social Services",
   hearingDates = Set(LocalDate.of(2015, Month.JUNE, 4), LocalDate.of(2015, Month.JUNE, 5)),
   estimatesDescription = "Budget Estimates",
-  pageSource = Source.fromURL(getClass.getResource("/au/id/tmm/estimatesqon/controller/socialServices20152016BudgetEstimates.html")),
+  pageSource = Source.fromURL(TestResources.socialServices20152016BudgetEstimates),
   expectedNumAnswers = 446,
   answerAssertions = Iterable(
 
