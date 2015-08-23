@@ -17,7 +17,10 @@ object AnswerUpdate {
   def withOldAndNewAnswers(oldAnswer: Option[Answer], newAnswer: Option[Answer]): AnswerUpdate =
     new AnswerUpdate(oldAnswer, newAnswer)
 
-  // TODO doc this
+  /**
+   * Used to register an AnswerUpdate the first time, where we have no data about previous answers. This is distinct
+   * from the case where the answer is new.
+   */
   def forExistingAnswer(existingAnswer: Answer) =
     new AnswerUpdate(None, Some(existingAnswer), AnswerUpdateType.EXISTING)
 
