@@ -11,7 +11,6 @@ object ElementUtils {
   
   def descendentsOf(element: Element): Set[Element] = {
     val children: Elements = element.children()
-
     children.flatMap(_.descendents).toSet ++ children
   }
 }

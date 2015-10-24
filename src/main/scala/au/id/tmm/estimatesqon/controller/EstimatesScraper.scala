@@ -15,7 +15,7 @@ import org.jsoup.select.Elements
 
 import scala.io.Source
 
-class EstimatesScraper protected (val estimates: Estimates) {
+private[controller] class EstimatesScraper protected (val estimates: Estimates) {
 
   def extractAnswers(page: Source): Seq[Answer] = {
     val htmlAsString: String = page.getLines().fold("")((left, right) => left + "\n" + right)
@@ -81,6 +81,6 @@ class EstimatesScraper protected (val estimates: Estimates) {
   }
 }
 
-object EstimatesScraper {
+private[controller] object EstimatesScraper {
   def forEstimates(estimates: Estimates) = new EstimatesScraper(estimates)
 }

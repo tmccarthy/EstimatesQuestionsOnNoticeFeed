@@ -11,6 +11,9 @@ class AnswerUpdate protected (val oldAnswer: Option[Answer],
 }
 
 object AnswerUpdate {
+  // TODO pair up the answers and create AnswerUpdates
+  def fromListsOfOldAndNewAnswers(oldAnswers: Set[Answer], newAnswers: Set[Answer]) = ???
+
   def withOldAndNewAnswers(oldAnswer: Answer, newAnswer: Answer): AnswerUpdate =
     withOldAndNewAnswers(Some(oldAnswer), Some(newAnswer))
 

@@ -10,7 +10,7 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.Element
 import StringUtils._
 
-class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
+private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
                                   val divisionOrAgencyCol: Option[Int],
                                   val senatorCol: Option[Int],
                                   val topicCol: Option[Int],
@@ -80,7 +80,7 @@ class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
     extractCellValue(column)(element => fromString(element.text.trim))(tableRow)
 }
 
-object AnswerColumnInfo {
+private[controller] object AnswerColumnInfo {
 
   def determineFromHeaderRow(headerRowElement: Element): AnswerColumnInfo = {
 
