@@ -5,44 +5,44 @@ import java.time.Instant
 import au.id.tmm.estimatesqon.data.QuestionsOnNoticeDAO
 import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, QuestionsOnNoticePage}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 class QuestionsOnNoticeUpdater protected (val dao: QuestionsOnNoticeDAO,
                                           val pages: Seq[QuestionsOnNoticePage]) {
-
   def doUpdate() = {
     pages.foreach(updateFromPage)
   }
 
-  private def updateFromPage(questionsOnNoticePage: QuestionsOnNoticePage) = {
+  private def updateFromPage(questionsOnNoticePage: QuestionsOnNoticePage): Future[Unit] = {
     val answersFromPage = questionsOnNoticePage.readAnswers
     val timestamp = Instant.now
 
-    val answerUpdates = answerUpdatesFrom(questionsOnNoticePage, answersFromPage)
+    answerUpdatesFrom(questionsOnNoticePage, answersFromPage)
+      .flatMap(answerUpdates => {
+        val newAnswerUpdateBundle: AnswerUpdateBundle = AnswerUpdateBundle.fromUpdates(answerUpdates, questionsOnNoticePage, timestamp)
 
-    val answerUpdateBundle = AnswerUpdateBundle.fromUpdates(answerUpdates, questionsOnNoticePage, timestamp)
-
-    dao.writeUpdateBundle(answerUpdateBundle)
+        dao.writeUpdateBundle(newAnswerUpdateBundle)
+      })
   }
 
   private def answerUpdatesFrom(questionsOnNoticePage: QuestionsOnNoticePage,
-                                answersFromPage: Set[Answer]): Set[AnswerUpdate] = {
-    val haveQueriedThisPageBefore = dao.haveQueried(questionsOnNoticePage)
-
-    if (haveQueriedThisPageBefore) {
-      updatesFromPreviousAnswersAndNewAnswers(questionsOnNoticePage, answersFromPage)
-    } else {
-      updatesForFirstQuery(answersFromPage)
-    }
+                                answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
+    dao.haveQueried(questionsOnNoticePage).flatMap(haveQueriedThisPageBefore => {
+      if (haveQueriedThisPageBefore) {
+        updatesFromPreviousAnswersAndNewAnswers(questionsOnNoticePage, answersFromPage)
+      } else {
+        updatesForFirstQuery(answersFromPage)
+      }
+    })
   }
 
-  private def updatesForFirstQuery(answersFromPage: Set[Answer]): Set[AnswerUpdate] = {
-    answersFromPage.map(AnswerUpdate.forExistingAnswer)
+  private def updatesForFirstQuery(answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
+    Future(answersFromPage.map(AnswerUpdate.forExistingAnswer))
   }
 
-  private def updatesFromPreviousAnswersAndNewAnswers(questionsOnNoticePage: QuestionsOnNoticePage, answersFromPage: Set[Answer]): Set[AnswerUpdate] = {
-    val answersFromDatabase = dao.retrieveAnswers(questionsOnNoticePage.estimates)
-
-    val answerUpdates = AnswerUpdate.fromListsOfOldAndNewAnswers(answersFromDatabase, answersFromPage)
-
-    answerUpdates
+  private def updatesFromPreviousAnswersAndNewAnswers(questionsOnNoticePage: QuestionsOnNoticePage, answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
+    dao.retrieveAnswers(questionsOnNoticePage.estimates)
+      .map(answersFromDatabase => AnswerUpdate.fromListsOfOldAndNewAnswers(answersFromDatabase, answersFromPage))
   }
 }

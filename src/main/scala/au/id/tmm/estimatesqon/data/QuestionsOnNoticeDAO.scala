@@ -2,17 +2,17 @@ package au.id.tmm.estimatesqon.data
 
 import au.id.tmm.estimatesqon.model.{QuestionsOnNoticePage, Answer, AnswerUpdateBundle, Estimates}
 
+import scala.concurrent.Future
+
 trait QuestionsOnNoticeDAO {
 
-  protected def storeExists(): Boolean
+  private[data] def initialise(): Future[Unit]
 
-  protected def createStore(): Unit
+  def haveQueried(questionsOnNoticePage: QuestionsOnNoticePage): Future[Boolean]
 
-  def haveQueried(questionsOnNoticePage: QuestionsOnNoticePage): Boolean
+  def retrieveAnswers(estimates: Estimates): Future[Set[Answer]]
 
-  def retrieveAnswers(estimates: Estimates): Set[Answer]
-
-  def writeUpdateBundle(updateBundle: AnswerUpdateBundle)
+  def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit]
 
 }
 
