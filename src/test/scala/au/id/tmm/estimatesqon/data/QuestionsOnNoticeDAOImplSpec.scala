@@ -23,7 +23,7 @@ class QuestionsOnNoticeDAOImplSpec extends FreeSpec {
       }
 
       "a call to initialise will create a database with the correct tables" in {
-        Await.result(daoImpl.initialise(), 1.seconds)
+        Await.result(daoImpl.initialise(), 5.seconds)
 
         val expectedDbLocation = workingDir.resolve("questionsOnNotice.db")
         assert(Files.isRegularFile(expectedDbLocation))
