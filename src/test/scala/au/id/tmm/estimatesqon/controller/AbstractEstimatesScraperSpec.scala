@@ -1,5 +1,6 @@
 package au.id.tmm.estimatesqon.controller
 
+import java.net.URL
 import java.time.LocalDate
 
 import au.id.tmm.estimatesqon.model.{Answer, Estimates, Portfolio}
@@ -10,19 +11,19 @@ import scala.io.Source
 private[controller] abstract class AbstractEstimatesScraperSpec protected (val portfolioName: String,
                                                                            val hearingDates: Set[LocalDate],
                                                                            val estimatesDescription: String,
-                                                                           val pageSource: Source,
+                                                                           val pageURL: URL,
                                                                            val expectedNumAnswers: Int,
                                                                            val answerAssertions: Iterable[AnswerAssertionInfo]
                                                                             ) extends FreeSpec {
 
   s"for the $portfolioName $estimatesDescription estimates held on $hearingDates" - {
     val portfolio: Portfolio = Portfolio.withName(portfolioName)
-    val estimates: Estimates = Estimates.create(portfolio, estimatesDescription, hearingDates)
+    val estimates: Estimates = Estimates.create(portfolio, estimatesDescription, hearingDates, pageURL)
 
     "in the extracted set of answers" - {
       val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
 
-      val answers: List[Answer] = scraper.extractAnswers(pageSource).toList
+      val answers: List[Answer] = scraper.extractAnswers.toList
 
       s"there should be $expectedNumAnswers elements" in {
         assert(answers.size === expectedNumAnswers)

@@ -2,6 +2,7 @@ package au.id.tmm.estimatesqon.model
 
 import java.time.{Month, LocalDate}
 
+import au.id.tmm.estimatesqon.controller.TestResources
 import org.scalatest.FreeSpec
 
 class EstimatesSpec extends FreeSpec {
@@ -10,7 +11,8 @@ class EstimatesSpec extends FreeSpec {
     val portfolio: Portfolio = Portfolio.withName("Communications")
     val hearingDates: Set[LocalDate] = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28))
 
-    val estimates: Estimates = Estimates.create(portfolio, "Budget Estimates", hearingDates)
+    val estimates: Estimates = Estimates.create(portfolio, "Budget Estimates", hearingDates,
+      TestResources.communications20152016BudgetEstimates)
 
     "should be for the communications porfolio" in {
       assert(portfolio === estimates.portfolio)

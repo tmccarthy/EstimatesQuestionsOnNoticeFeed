@@ -8,7 +8,7 @@ class CommunicationsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
   portfolioName = "Communications",
   hearingDates = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28)),
   estimatesDescription = "Budget Estimates",
-  pageSource = Source.fromURL(TestResources.communications20152016BudgetEstimates),
+  pageURL = TestResources.communications20152016BudgetEstimates,
   expectedNumAnswers = 138,
   answerAssertions = Iterable(
 

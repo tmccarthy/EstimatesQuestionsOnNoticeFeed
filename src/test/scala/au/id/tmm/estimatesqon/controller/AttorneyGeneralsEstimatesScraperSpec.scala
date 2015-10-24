@@ -8,7 +8,7 @@ class AttorneyGeneralsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
   portfolioName = "Attorney General's Portfolio",
   hearingDates = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28)),
   estimatesDescription = "Budget Estimates",
-  pageSource = Source.fromURL(TestResources.attnyGeneral20152016BudgetEstimates),
+  pageURL = TestResources.attnyGeneral20152016BudgetEstimates,
   expectedNumAnswers = 115,
   answerAssertions = Iterable(
 

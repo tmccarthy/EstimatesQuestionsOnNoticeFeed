@@ -3,32 +3,33 @@ package au.id.tmm.estimatesqon.controller
 import java.time.Instant
 
 import au.id.tmm.estimatesqon.data.QuestionsOnNoticeDAO
-import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, QuestionsOnNoticePage}
+import au.id.tmm.estimatesqon.model._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class QuestionsOnNoticeUpdater protected (val dao: QuestionsOnNoticeDAO,
-                                          val pages: Seq[QuestionsOnNoticePage]) {
+                                          val estimates: Seq[Estimates]) {
   def doUpdate() = {
-    pages.foreach(updateFromPage)
+    estimates.foreach(updateFromPage)
   }
 
-  private def updateFromPage(questionsOnNoticePage: QuestionsOnNoticePage): Future[Unit] = {
-    val answersFromPage = questionsOnNoticePage.readAnswers
+  private def updateFromPage(estimates: Estimates): Future[Unit] = {
+
     val timestamp = Instant.now
 
-    answerUpdatesFrom(questionsOnNoticePage, answersFromPage)
+    estimates.readAnswers
+      .flatMap(answersFromPage => answerUpdatesFrom(estimates, answersFromPage))
       .flatMap(answerUpdates => {
-        val newAnswerUpdateBundle: AnswerUpdateBundle = AnswerUpdateBundle.fromUpdates(answerUpdates, questionsOnNoticePage, timestamp)
+        val newAnswerUpdateBundle: AnswerUpdateBundle = AnswerUpdateBundle.fromUpdates(answerUpdates, estimates, timestamp)
 
         dao.writeUpdateBundle(newAnswerUpdateBundle)
       })
   }
 
-  private def answerUpdatesFrom(questionsOnNoticePage: QuestionsOnNoticePage,
+  private def answerUpdatesFrom(questionsOnNoticePage: Estimates,
                                 answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
-    dao.haveQueried(questionsOnNoticePage).flatMap(haveQueriedThisPageBefore => {
+    dao.haveEverQueried(questionsOnNoticePage).flatMap(haveQueriedThisPageBefore => {
       if (haveQueriedThisPageBefore) {
         updatesFromPreviousAnswersAndNewAnswers(questionsOnNoticePage, answersFromPage)
       } else {
@@ -41,8 +42,8 @@ class QuestionsOnNoticeUpdater protected (val dao: QuestionsOnNoticeDAO,
     Future(answersFromPage.map(AnswerUpdate.forExistingAnswer))
   }
 
-  private def updatesFromPreviousAnswersAndNewAnswers(questionsOnNoticePage: QuestionsOnNoticePage, answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
-    dao.retrieveAnswers(questionsOnNoticePage.estimates)
+  private def updatesFromPreviousAnswersAndNewAnswers(estimates: Estimates, answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
+    dao.retrieveAnswers(estimates)
       .map(answersFromDatabase => AnswerUpdate.fromListsOfOldAndNewAnswers(answersFromDatabase, answersFromPage))
   }
 }

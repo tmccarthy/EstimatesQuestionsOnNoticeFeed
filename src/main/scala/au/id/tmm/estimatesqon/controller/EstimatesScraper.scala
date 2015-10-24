@@ -13,12 +13,14 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.{Document, Element}
 import org.jsoup.select.Elements
 
-import scala.io.Source
+import scala.io.{BufferedSource, Source}
 
 private[controller] class EstimatesScraper protected (val estimates: Estimates) {
 
-  def extractAnswers(page: Source): Seq[Answer] = {
-    val htmlAsString: String = page.getLines().fold("")((left, right) => left + "\n" + right)
+  def extractAnswers: Seq[Answer] = {
+    val pageSource: Source = Source.fromURL(estimates.pageURL)
+
+    val htmlAsString: String = pageSource.getLines().fold("")((left, right) => left + "\n" + right)
 
     val browser: Browser = new Browser
     val document: Document = browser.parseString(htmlAsString)
