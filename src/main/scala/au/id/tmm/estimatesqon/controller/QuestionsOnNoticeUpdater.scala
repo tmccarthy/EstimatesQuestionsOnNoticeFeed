@@ -3,6 +3,7 @@ package au.id.tmm.estimatesqon.controller
 import java.time.Instant
 
 import au.id.tmm.estimatesqon.data.QuestionsOnNoticeDAO
+import au.id.tmm.estimatesqon.data.databasemodel.{AnswerRow, EstimatesRow}
 import au.id.tmm.estimatesqon.model._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,7 +19,7 @@ class QuestionsOnNoticeUpdater protected (val dao: QuestionsOnNoticeDAO,
 
     val timestamp = Instant.now
 
-    estimates.readAnswers
+    readAnswerFromPageFor(estimates)
       .flatMap(answersFromPage => answerUpdatesFrom(estimates, answersFromPage))
       .flatMap(answerUpdates => {
         val newAnswerUpdateBundle: AnswerUpdateBundle = AnswerUpdateBundle.fromUpdates(answerUpdates, estimates, timestamp)
@@ -26,6 +27,8 @@ class QuestionsOnNoticeUpdater protected (val dao: QuestionsOnNoticeDAO,
         dao.writeUpdateBundle(newAnswerUpdateBundle)
       })
   }
+
+  private def readAnswerFromPageFor(estimates: Estimates): Future[Set[Answer]] = ???
 
   private def answerUpdatesFrom(questionsOnNoticePage: Estimates,
                                 answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {

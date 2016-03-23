@@ -2,18 +2,18 @@ package au.id.tmm.estimatesqon.controller
 
 import java.net.URL
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
-import au.id.tmm.estimatesqon.utils.StringUtils
-import StringUtils.InstanceStringUtils
+import au.id.tmm.estimatesqon.data.databasemodel.{AnswerRow, EstimatesRow}
 import au.id.tmm.estimatesqon.model.{Answer, Estimates}
+import au.id.tmm.estimatesqon.utils.StringUtils
+import au.id.tmm.estimatesqon.utils.StringUtils.InstanceStringUtils
 import net.ruippeixotog.scalascraper.browser.Browser
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.{Document, Element}
 import org.jsoup.select.Elements
 
-import scala.io.{BufferedSource, Source}
+import scala.io.Source
 
 private[controller] class EstimatesScraper protected (val estimates: Estimates) {
 
@@ -56,12 +56,12 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
 
     val contentRows = tableRows.drop(1)
 
-    val answers: Stream[Answer] = contentRows.map(answerFromContentRow(answerColumnInfo, _)).toStream
+    val answers: Stream[Answer] = contentRows.map(answerFromContentRow(answerColumnInfo, _)).toStream.flatten
 
     answers
   }
 
-  private def answerFromContentRow(answerColumnInfo: AnswerColumnInfo, questionsOnNoticeTableRow: Element): Answer = {
+  private def answerFromContentRow(answerColumnInfo: AnswerColumnInfo, questionsOnNoticeTableRow: Element): Option[Answer] = {
 
     val qonNumber: Option[String] = answerColumnInfo.extractQONNumber(questionsOnNoticeTableRow)
     val divisionOrAgency: Option[String] = answerColumnInfo.extractDivisionOrAgency(questionsOnNoticeTableRow)
@@ -70,16 +70,20 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
     val pdfs: Seq[URL] = answerColumnInfo.extractPDFs(questionsOnNoticeTableRow).getOrElse(Seq.empty)
     val date: Seq[LocalDate] = answerColumnInfo.extractDates(questionsOnNoticeTableRow).getOrElse(Seq.empty)
 
-    val returnedAnswer: Answer = Answer.create(
-      estimates,
-      qonNumber,
-      divisionOrAgency,
-      senator,
-      topic,
-      pdfs,
-      date)
+    if (qonNumber.isDefined) {
+      val answer: Answer = Answer.create(
+        estimates,
+        qonNumber.get,
+        divisionOrAgency,
+        senator,
+        topic,
+        pdfs,
+        date)
 
-    returnedAnswer
+      Some(answer)
+    } else {
+      None
+    }
   }
 }
 

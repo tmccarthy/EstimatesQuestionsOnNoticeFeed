@@ -1,90 +1,62 @@
 package au.id.tmm.estimatesqon.data
 
 import java.nio.file.{Files, Paths}
-import java.time.{Month, LocalDate}
 
-import au.id.tmm.estimatesqon.controller.TestResources
-import au.id.tmm.estimatesqon.data.databasemodel.Portfolios
-import au.id.tmm.estimatesqon.model.{Portfolio, Estimates}
+import au.id.tmm.estimatesqon.StandardProjectSpec
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
-import org.scalatest.FreeSpec
 import slick.jdbc.meta.MTable
-import slick.lifted.{Query, TableQuery}
-import slick.driver.SQLiteDriver.api._
 
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
-class QuestionsOnNoticeDAOImplSpec extends FreeSpec {
-  "A questions on notice DAO implementation" - {
-    val daoImpl = new QuestionsOnNoticeDAOImpl
+class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
 
-    "given there is no database in the working directory" - {
-      val workingDir = Paths.get("working")
+  private val config: Config = ConfigFactory.load()
 
-      if (Files.exists(workingDir)) {
-        FileUtils.cleanDirectory(workingDir.toFile)
-      } else {
-        Files.createDirectories(workingDir)
-      }
+  val workingDir = Paths.get(config.getString("testWorkingDir"))
 
-      "a call to initialise" - {
-        Await.result(daoImpl.initialiseIfNeeded(), 5.seconds)
+  val dbPath = Paths.get(config.getString("testDB.path"))
 
-        "will create a databse file in the expected location" in {
-          val expectedDbLocation = workingDir.resolve("questionsOnNotice.db")
-          assert(Files.isRegularFile(expectedDbLocation))
-        }
+  val dao = QuestionsOnNoticeDAOImpl.forConfigName("testDB")
 
-        "will create the expected tables" in {
-          val listTables: Future[Vector[MTable]] = daoImpl.database.run(MTable.getTables)
-          val tableMetadata: Vector[MTable] = Await.result(listTables, 1.second)
-          val actualTableNames: Set[String] = tableMetadata
-            .map(_.name.name)
-            .toSet
-            .filterNot(_ == "sqlite_sequence")
+  def initialiseNewDb(): Unit = {
+    Given("the working directory is clean")
+    cleanWorkingDir()
 
-          val expectedTableNames: Set[String] = Set("AnswerUpdates", "DateSets", "Estimates",
-            "PageQueries", "PDFLinkBundles", "Portfolios")
+    When("the dao is initialised")
+    Await.result(dao.initialiseIfNeeded(), 30.seconds)
+  }
 
-          assert(actualTableNames == expectedTableNames)
-        }
-
-        "will populate the Portfolios table" in {
-          val query: Query[Rep[String], String, Seq] = TableQuery[Portfolios].map(_.name)
-          val result: Seq[String] = Await.result(daoImpl.database.run(query.result), 5.seconds)
-
-          assert (result == Seq(
-            "Agriculture and Water Resources",
-            "Attorney-General's",
-            "Communications and the Arts",
-            "Defence",
-            "Education and Training",
-            "Employment",
-            "Environment ",
-            "Finance",
-            "Foreign Affairs and Trade",
-            "Health",
-            "Immigration and Border Protection",
-            "Industry, Innovation and Science",
-            "Infrastructure and Regional Development",
-            "Parliament",
-            "Prime Minister and Cabinet",
-            "Social Services",
-            "Treasury")
-          )
-        }
-      }
-
-      "once the database is initialised" - {
-        Await.result(daoImpl.initialiseIfNeeded(), 5.seconds)
-
-        "a given Estimates will not have been queried before" in {
-          val portfolio: Portfolio = Portfolio.withName("Communications")
-          val hearingDates: Set[LocalDate] = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28))
-          Estimates.create(portfolio, "Budget Estimates", hearingDates, TestResources.communications20152016BudgetEstimates)
-        }
-      }
+  def cleanWorkingDir() = {
+    if (Files.exists(workingDir)) {
+      FileUtils.cleanDirectory(workingDir.toFile)
+    } else {
+      Files.createDirectories(workingDir)
     }
   }
+
+  "The DAO" should "create a database file if none exists" in {
+    initialiseNewDb()
+
+    Then("a new database file is created")
+    assert(Files.isRegularFile(dbPath), dbPath)
+  }
+
+  it should "create the empty tables on DB initialisation" in {
+    initialiseNewDb()
+
+    Then("the tables are created")
+    val listTables: Future[Vector[MTable]] = dao.database.run(MTable.getTables)
+    val tableMetadata: Vector[MTable] = Await.result(listTables, 1.second)
+    val actualTableNames: Set[String] = tableMetadata
+      .map(_.name.name)
+      .toSet
+      .filterNot(_ == "sqlite_sequence")
+
+    val expectedTableNames: Set[String] = Set("PageQueries", "Answers", "PDFLinkBundles", "Estimates")
+
+    assert(actualTableNames == expectedTableNames)
+  }
+
 }

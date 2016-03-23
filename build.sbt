@@ -4,8 +4,12 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
+scalacOptions ++= Seq("-unchecked", "-deprecation")
+
 libraryDependencies ++= Seq(
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
+
+  "org.slf4j" % "slf4j-simple" % "1.7.19",
 
   "net.ruippeixotog" %% "scala-scraper" % "0.1.1",
 

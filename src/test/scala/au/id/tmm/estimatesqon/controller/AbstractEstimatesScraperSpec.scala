@@ -63,7 +63,7 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val p
 
   def questionOnNoticeNumberAssertions(answer: Answer, qonNumber: String): Unit = {
     s"the question on notice number should be $qonNumber" in {
-      assert(answer.qonIdentifier === Option.apply(qonNumber))
+      assert(answer.qonIdentifier === qonNumber)
     }
   }
 

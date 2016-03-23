@@ -14,7 +14,7 @@ class AnswerUpdateSpec extends FreeSpec {
     TestResources.communications20152016BudgetEstimates)
 
   def defaultAnswer(estimates: Estimates = estimates,
-                    qonNumber: Option[String] = Some("1"),
+                    qonNumber: String = "1",
                     divisionOrAgency: Option[String] = Some("All"),
                     senator: Option[String] = Some("Carr"),
                     topic: Option[String] = Some("General"),
@@ -44,8 +44,8 @@ class AnswerUpdateSpec extends FreeSpec {
   }
 
   s"an update for answers to different questions should throw an IllegalArgumentException when constructed" in {
-    val oldAnswer = defaultAnswer(qonNumber = Some("1"))
-    val newAnswer = defaultAnswer(qonNumber = Some("2"))
+    val oldAnswer = defaultAnswer(qonNumber = "1")
+    val newAnswer = defaultAnswer(qonNumber = "2")
 
     intercept[IllegalArgumentException] {
       AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)

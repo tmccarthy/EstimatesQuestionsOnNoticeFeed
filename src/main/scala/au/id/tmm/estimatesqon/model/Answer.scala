@@ -4,7 +4,7 @@ import java.net.URL
 import java.time.LocalDate
 
 class Answer protected (val estimates: Estimates,
-                        val qonIdentifier: Option[String],
+                        val qonIdentifier: String,
 
                         val divisionOrAgency: Option[String],
                         val senator: Option[String],
@@ -48,7 +48,7 @@ class Answer protected (val estimates: Estimates,
 
 object Answer {
   def create(estimates: Estimates,
-             qonNumber: Option[String],
+             qonNumber: String,
              divisionOrAgency: Option[String],
              senator: Option[String],
              topic: Option[String],
