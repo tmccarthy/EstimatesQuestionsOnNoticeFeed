@@ -1,5 +1,7 @@
 package au.id.tmm.estimatesqon.data.databasemodel
 
+import java.sql.Date
+
 import slick.lifted.Tag
 import slick.driver.SQLiteDriver.api._
 
@@ -13,8 +15,9 @@ private[data] case class AnswerRow(answerID: Long,
                                    division: Option[String],
                                    senator: Option[String],
                                    topic: Option[String],
-                                   pdfLinksBundleID: Option[Long],
-                                   datesReceivedListID: Option[Long])
+                                   latestDateReceived: Option[Date],
+
+                                   pdfLinksBundleID: Option[Long])
 
 class AnswersTable(tag: Tag) extends Table[AnswerRow](tag, "Answers") {
 
@@ -28,8 +31,9 @@ class AnswersTable(tag: Tag) extends Table[AnswerRow](tag, "Answers") {
   def division = column[Option[String]]("division")
   def senator = column[Option[String]]("senator")
   def topic = column[Option[String]]("topic")
+  def latestDateReceived = column[Option[Date]]("datesReceivedListID")
+
   def pdfLinksBundleID = column[Option[Long]]("pdfLinksBundleID")
-  def datesReceivedListID = column[Option[Long]]("datesReceivedListID") // TODO this concept needs rethinking
 
   def estimates = foreignKey("ESTIMATES_FK", estimatesID, TableQuery[EstimatesTable])(_.estimatesID)
 
@@ -47,6 +51,6 @@ class AnswersTable(tag: Tag) extends Table[AnswerRow](tag, "Answers") {
     division,
     senator,
     topic,
-    pdfLinksBundleID,
-    datesReceivedListID) <> (AnswerRow.tupled, AnswerRow.unapply)
+    latestDateReceived,
+    pdfLinksBundleID) <> (AnswerRow.tupled, AnswerRow.unapply)
 }

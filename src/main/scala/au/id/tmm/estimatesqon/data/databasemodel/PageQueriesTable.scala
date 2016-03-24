@@ -10,5 +10,7 @@ class PageQueriesTable(tag: Tag) extends Table[PageQueryRow](tag, "PageQueries")
   def url = column[String]("url")
   def timestamp = column[Long]("timestamp")
 
+  def estimates = foreignKey("ESTIMATES_FK", url, TableQuery[EstimatesTable])(_.pageURL)
+
   def * = (pageQueryID, url, timestamp) <> (PageQueryRow.tupled, PageQueryRow.unapply)
 }

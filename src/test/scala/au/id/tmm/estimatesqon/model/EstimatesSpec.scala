@@ -11,8 +11,7 @@ class EstimatesSpec extends FreeSpec {
     val portfolio: Portfolio = Portfolio.withName("Communications")
     val hearingDates: Set[LocalDate] = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28))
 
-    val estimates: Estimates = Estimates.create(portfolio, "Budget Estimates", hearingDates,
-      TestResources.communications20152016BudgetEstimates)
+    val estimates: Estimates = Estimates.create(portfolio, "Budget Estimates", TestResources.communications20152016BudgetEstimates, hearingDates)
 
     "should be for the communications porfolio" in {
       assert(portfolio === estimates.portfolio)

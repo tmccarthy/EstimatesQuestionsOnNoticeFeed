@@ -8,18 +8,15 @@ import org.scalatest.FreeSpec
 
 import scala.io.Source
 
-private[controller] abstract class AbstractEstimatesScraperSpec protected (val portfolioName: String,
-                                                                           val hearingDates: Set[LocalDate],
-                                                                           val estimatesDescription: String,
-                                                                           val pageURL: URL,
+private[controller] abstract class AbstractEstimatesScraperSpec protected (val estimatesToTest: Estimates,
+                                                                           val resourceURL: URL,
                                                                            val expectedNumAnswers: Int,
                                                                            val answerAssertions: Iterable[AnswerAssertionInfo]
-                                                                            ) extends FreeSpec {
+                                                                          ) extends FreeSpec {
 
-  s"for the $portfolioName $estimatesDescription estimates held on $hearingDates" - {
-    val portfolio: Portfolio = Portfolio.withName(portfolioName)
-    val estimates: Estimates = Estimates.create(portfolio, estimatesDescription, hearingDates, pageURL)
+  val estimates = estimatesToTest.cloneWithUrl(resourceURL)
 
+  s"for the ${estimates.portfolio.name} ${estimates.description} estimates held on ${estimates.hearingDates}" - {
     "in the extracted set of answers" - {
       val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
 

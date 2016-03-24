@@ -9,9 +9,7 @@ import org.scalatest.FreeSpec
 class AnswerUpdateSpec extends FreeSpec {
 
   private val portfolio = Portfolio.withName("Communications")
-  private val estimates = Estimates.create(portfolio, "Budget Estimates",
-    Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28)),
-    TestResources.communications20152016BudgetEstimates)
+  private val estimates = Estimates.create(portfolio, "Budget Estimates", TestResources.communications20152016BudgetEstimates, Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28)))
 
   def defaultAnswer(estimates: Estimates = estimates,
                     qonNumber: String = "1",

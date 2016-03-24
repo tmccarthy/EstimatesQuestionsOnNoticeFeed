@@ -3,6 +3,7 @@ package au.id.tmm.estimatesqon.data
 import java.nio.file.{Files, Paths}
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
+import au.id.tmm.estimatesqon.model.{ExampleEstimates, Estimates}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import slick.jdbc.meta.MTable
@@ -58,5 +59,4 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
 
     assert(actualTableNames == expectedTableNames)
   }
-
 }

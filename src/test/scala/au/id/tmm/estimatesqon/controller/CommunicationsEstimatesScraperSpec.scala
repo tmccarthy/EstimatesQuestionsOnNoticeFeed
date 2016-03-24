@@ -2,13 +2,13 @@ package au.id.tmm.estimatesqon.controller
 
 import java.time.{Month, LocalDate}
 
+import au.id.tmm.estimatesqon.model.ExampleEstimates
+
 import scala.io.Source
 
 class CommunicationsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
-  portfolioName = "Communications",
-  hearingDates = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28)),
-  estimatesDescription = "Budget Estimates",
-  pageURL = TestResources.communications20152016BudgetEstimates,
+  estimatesToTest = ExampleEstimates.COMMUNICATIONS_2015_BUDGET,
+  resourceURL = TestResources.communications20152016BudgetEstimates,
   expectedNumAnswers = 138,
   answerAssertions = Iterable(
 

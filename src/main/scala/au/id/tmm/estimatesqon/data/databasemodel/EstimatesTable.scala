@@ -30,7 +30,7 @@ class EstimatesTable(tag: Tag) extends Table[EstimatesRow](tag, "Estimates") {
 
   def answerUpdates = foreignKey("ANSWER_UPDATES_FK", estimatesID, TableQuery[AnswersTable])(_.estimatesID)
 
-  def pageQueries = foreignKey("PAGE_QUERIES_FK", estimatesID, TableQuery[PageQueriesTable])(_.pageQueryID)
+  def pageQueries = foreignKey("PAGE_QUERIES_FK", pageURL, TableQuery[PageQueriesTable])(_.url)
 
   def * = (estimatesID, portfolioName, description, firstDay, lastDay, pageURL) <> (EstimatesRow.tupled, EstimatesRow.unapply)
 }
