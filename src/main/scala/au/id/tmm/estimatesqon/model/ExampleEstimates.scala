@@ -1,7 +1,7 @@
 package au.id.tmm.estimatesqon.model
 
 import java.net.URL
-import java.time.{Month, LocalDate}
+import java.time.{Period, Month, LocalDate}
 
 object ExampleEstimates {
 
@@ -26,6 +26,6 @@ object ExampleEstimates {
     Portfolios.TREASURY,
     "Budget Estimates",
     new URL("http://www.aph.gov.au/Parliamentary_Business/Senate_Estimates/economicsctte/estimates/bud1516/Treasury/index"),
-    LocalDate.of(2015, Month.JUNE, 1), LocalDate.of(2015, Month.JUNE, 2), LocalDate.of(2015, Month.JUNE, 3))
+    LocalDate.of(2015, Month.JUNE, 1), LocalDate.of(2015, Month.JUNE, 3))
 
 }

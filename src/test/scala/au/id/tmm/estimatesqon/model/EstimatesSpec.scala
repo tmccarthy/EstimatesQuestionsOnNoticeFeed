@@ -1,28 +1,67 @@
 package au.id.tmm.estimatesqon.model
 
-import java.time.{Month, LocalDate}
+import java.net.URL
+import java.time.{LocalDate, Month}
+import java.util.Date
 
+import au.id.tmm.estimatesqon.StandardProjectSpec
 import au.id.tmm.estimatesqon.controller.TestResources
-import org.scalatest.FreeSpec
 
-class EstimatesSpec extends FreeSpec {
+class EstimatesSpec extends StandardProjectSpec {
 
-  "an estimates object created for the communications portfolio and the 2015-2016 Budget Estimates" - {
-    val portfolio: Portfolio = Portfolio.withName("Communications")
-    val hearingDates: Set[LocalDate] = Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28))
+  val portfolio: Portfolio = Portfolio.withName("Communications")
+  val description: String = "Budget Estimates"
+  val pageUrl: URL = TestResources.communications20152016BudgetEstimates
 
-    val estimates: Estimates = Estimates.create(portfolio, "Budget Estimates", TestResources.communications20152016BudgetEstimates, hearingDates)
+  val firstDay: LocalDate = LocalDate.of(2015, Month.MAY, 27)
+  val lastDay: LocalDate = LocalDate.of(2015, Month.MAY, 28)
 
-    "should be for the communications porfolio" in {
-      assert(portfolio === estimates.portfolio)
-    }
+  val estimatesUnderTest: Estimates = Estimates.create(
+    portfolio,
+    description,
+    pageUrl,
+    firstDay, lastDay)
 
-    "should have the description 'Budget Estimates'" in {
-      assert("Budget Estimates" === estimates.description)
-    }
+  "A constructed Estimates" should "have the correct portfolio" in {
+    assert(portfolio === estimatesUnderTest.portfolio)
+  }
 
-    "should have the hearing dates of the 27th and 28th of May 2015" in {
-      assert(hearingDates === estimates.hearingDates)
+  it should "have the correct description" in {
+    assert(description === estimatesUnderTest.description)
+  }
+
+  it should "have the correct first day" in {
+    assert(firstDay === estimatesUnderTest.firstDay)
+  }
+
+  it should "have the correct second day" in {
+    assert(lastDay === estimatesUnderTest.lastDay)
+  }
+
+  it should "have the correct page URL" in {
+    assert(pageUrl === estimatesUnderTest.pageURL)
+  }
+
+  it should "correctly convert the first and last dates to the old format" in {
+    val expectedFirstDayOldFormat: Date = new Date(1432648800000l)
+    val expectedLastDayOldFormat: Date = new Date(1432735200000l)
+
+    assert(expectedFirstDayOldFormat === estimatesUnderTest.firstDayOldDateType)
+    assert(expectedLastDayOldFormat === estimatesUnderTest.lastDayOldDateType)
+  }
+
+  "An estimates" can "be constructed using dates in the old type" in {
+    val firstDayOldType: Date = new Date(1432648800000l)
+    val lastDayOldType: Date = new Date(1432735200000l)
+
+    val estimatesWithOldDateTypes = Estimates.create(portfolio, description, pageUrl, firstDayOldType, lastDayOldType)
+
+    assert(estimatesUnderTest === estimatesWithOldDateTypes)
+  }
+
+  "An estimates" should "throw if its first day is after its last day" in {
+    intercept[IllegalArgumentException] {
+      Estimates.create(portfolio, description, pageUrl, lastDay, firstDay)
     }
   }
 }

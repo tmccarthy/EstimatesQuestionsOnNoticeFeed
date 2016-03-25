@@ -1,7 +1,7 @@
 package au.id.tmm.estimatesqon.model
 
 import java.net.URL
-import java.time.{Month, LocalDate}
+import java.time.{Period, Month, LocalDate}
 
 import au.id.tmm.estimatesqon.controller.TestResources
 import org.scalatest.FreeSpec
@@ -9,7 +9,9 @@ import org.scalatest.FreeSpec
 class AnswerUpdateSpec extends FreeSpec {
 
   private val portfolio = Portfolio.withName("Communications")
-  private val estimates = Estimates.create(portfolio, "Budget Estimates", TestResources.communications20152016BudgetEstimates, Set(LocalDate.of(2015, Month.MAY, 27), LocalDate.of(2015, Month.MAY, 28)))
+  private val estimates = ExampleEstimates
+    .COMMUNICATIONS_2015_BUDGET
+    .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
 
   def defaultAnswer(estimates: Estimates = estimates,
                     qonNumber: String = "1",

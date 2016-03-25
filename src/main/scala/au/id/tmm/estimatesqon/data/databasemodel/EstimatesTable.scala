@@ -1,10 +1,11 @@
 package au.id.tmm.estimatesqon.data.databasemodel
 
+import java.net.URL
 import java.sql.Date
-import java.time.{ZoneId, LocalDate, Period}
 
-import slick.lifted.Tag
+import au.id.tmm.estimatesqon.model.{Estimates, Portfolio}
 import slick.driver.SQLiteDriver.api._
+import slick.lifted.Tag
 
 private[data] case class EstimatesRow(estimatesID: Long,
                         portfolioName: String,
@@ -12,11 +13,13 @@ private[data] case class EstimatesRow(estimatesID: Long,
                         firstDay: Date,
                         lastDay: Date,
                         pageURL: String) {
-  lazy val firstDayLocalDate: LocalDate = firstDay.toInstant.atZone(ZoneId.of("AET")).toLocalDate
 
-  lazy val lastDayLocalDate: LocalDate = lastDay.toInstant.atZone(ZoneId.of("AET")).toLocalDate
-
-  lazy val hearingDates: Period = Period.between(firstDayLocalDate, lastDayLocalDate)
+  lazy val asEstimates: Estimates = Estimates.create(
+    Portfolio.withName(portfolioName),
+    description,
+    new URL(pageURL),
+    firstDay,
+    lastDay)
 }
 
 class EstimatesTable(tag: Tag) extends Table[EstimatesRow](tag, "Estimates") {
@@ -31,6 +34,8 @@ class EstimatesTable(tag: Tag) extends Table[EstimatesRow](tag, "Estimates") {
   def answerUpdates = foreignKey("ANSWER_UPDATES_FK", estimatesID, TableQuery[AnswersTable])(_.estimatesID)
 
   def pageQueries = foreignKey("PAGE_QUERIES_FK", pageURL, TableQuery[PageQueriesTable])(_.url)
+
+  def naturalIndex = index("IDX_NATURAL", (portfolioName, firstDay), unique = true)
 
   def * = (estimatesID, portfolioName, description, firstDay, lastDay, pageURL) <> (EstimatesRow.tupled, EstimatesRow.unapply)
 }

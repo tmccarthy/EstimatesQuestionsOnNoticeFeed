@@ -1,6 +1,6 @@
 package au.id.tmm.estimatesqon.model
 
-class Portfolio protected (val name: String) {
+case class Portfolio protected (val name: String) {
 }
 
 object Portfolio {

@@ -3,7 +3,7 @@ package au.id.tmm.estimatesqon.model
 import java.net.URL
 import java.time.LocalDate
 
-class Answer protected (val estimates: Estimates,
+case class Answer protected (val estimates: Estimates,
                         val qonIdentifier: String,
 
                         val divisionOrAgency: Option[String],
@@ -12,7 +12,7 @@ class Answer protected (val estimates: Estimates,
                         val pdfURLs: Seq[URL],
                         val datesReceived: Seq[LocalDate]
                          ) {
-  
+
   def hasDifferentQONIdentifierTo(that: Answer): Boolean = {
     qonIdentifier != that.qonIdentifier
   }
@@ -23,26 +23,6 @@ class Answer protected (val estimates: Estimates,
       topic != that.topic ||
       pdfURLs != that.pdfURLs ||
       datesReceived != that.datesReceived
-  }
-
-  def canEqual(other: Any): Boolean = other.isInstanceOf[Answer]
-
-  override def equals(other: Any): Boolean = other match {
-    case that: Answer =>
-      (that canEqual this) &&
-        estimates == that.estimates &&
-        qonIdentifier == that.qonIdentifier &&
-        divisionOrAgency == that.divisionOrAgency &&
-        senator == that.senator &&
-        topic == that.topic &&
-        pdfURLs == that.pdfURLs &&
-        datesReceived == that.datesReceived
-    case _ => false
-  }
-
-  override def hashCode(): Int = {
-    val state = Seq(estimates, qonIdentifier, divisionOrAgency, senator, topic, pdfURLs, datesReceived)
-    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 }
 

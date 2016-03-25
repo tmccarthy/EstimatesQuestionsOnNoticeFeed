@@ -46,7 +46,7 @@ class QuestionsOnNoticeUpdater protected (val dao: QuestionsOnNoticeDAO,
   }
 
   private def updatesFromPreviousAnswersAndNewAnswers(estimates: Estimates, answersFromPage: Set[Answer]): Future[Set[AnswerUpdate]] = {
-    dao.retrieveAnswers(estimates)
+    dao.retrieveLatestAnswersFor(estimates)
       .map(answersFromDatabase => AnswerUpdate.fromListsOfOldAndNewAnswers(answersFromDatabase, answersFromPage))
   }
 }

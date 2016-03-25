@@ -8,11 +8,13 @@ trait QuestionsOnNoticeDAO {
 
   private[data] def initialiseIfNeeded(): Future[Unit]
 
-  def recordEstimates(estimates: Estimates): Future[Unit]
+  def registerEstimates(estimates: Estimates): Future[Unit]
+
+  def listEstimates: Future[Set[Estimates]]
 
   def haveEverQueried(estimates: Estimates): Future[Boolean]
 
-  def retrieveAnswers(estimates: Estimates): Future[Set[Answer]]
+  def retrieveLatestAnswersFor(estimates: Estimates): Future[Set[Answer]]
 
   def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit]
 

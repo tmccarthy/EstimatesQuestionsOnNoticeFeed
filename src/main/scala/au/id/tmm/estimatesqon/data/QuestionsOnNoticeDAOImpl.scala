@@ -1,5 +1,7 @@
 package au.id.tmm.estimatesqon.data
 
+import java.sql.Date
+
 import au.id.tmm.estimatesqon.data.databasemodel._
 import au.id.tmm.estimatesqon.model.{Estimates, Answer, AnswerUpdateBundle}
 import slick.driver.SQLiteDriver.api._
@@ -44,11 +46,36 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
 
   override def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit] = ???
 
-  override def recordEstimates(estimates: Estimates): Future[Unit] = ???
+  override def registerEstimates(estimates: Estimates): Future[Unit] = {
+    val newRow: EstimatesRow = EstimatesRow(-1,
+      estimates.portfolio.name,
+      estimates.description,
+      new Date(estimates.firstDayOldDateType.getTime),
+      new Date(estimates.lastDayOldDateType.getTime),
+      estimates.pageURL.toString)
 
-  override def haveEverQueried(estimates: Estimates): Future[Boolean] = ???
+    val query = TableQuery[EstimatesTable] += newRow
 
-  override def retrieveAnswers(estimates: Estimates): Future[Set[Answer]] = ???
+    database.run(query).map(_ => Unit)
+  }
+
+  override def listEstimates: Future[Set[Estimates]] = {
+    val query = TableQuery[EstimatesTable]
+
+    val rowsFuture: Future[Seq[EstimatesRow]] = database.run(query.result)
+
+    rowsFuture.map(_.map(_.asEstimates).toSet)
+  }
+
+  override def haveEverQueried(estimates: Estimates): Future[Boolean] = {
+    val query = TableQuery[PageQueriesTable]
+      .filter(_.url === estimates.pageURL.toString)
+      .exists
+
+    database.run(query.result)
+  }
+
+  override def retrieveLatestAnswersFor(estimates: Estimates): Future[Set[Answer]] = ???
 }
 
 object QuestionsOnNoticeDAOImpl {

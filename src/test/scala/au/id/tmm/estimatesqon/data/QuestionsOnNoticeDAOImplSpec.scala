@@ -1,15 +1,16 @@
 package au.id.tmm.estimatesqon.data
 
 import java.nio.file.{Files, Paths}
+import java.sql.SQLException
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
-import au.id.tmm.estimatesqon.model.{ExampleEstimates, Estimates}
+import au.id.tmm.estimatesqon.model.ExampleEstimates
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import slick.jdbc.meta.MTable
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
 
@@ -22,10 +23,8 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
   val dao = QuestionsOnNoticeDAOImpl.forConfigName("testDB")
 
   def initialiseNewDb(): Unit = {
-    Given("the working directory is clean")
     cleanWorkingDir()
 
-    When("the dao is initialised")
     Await.result(dao.initialiseIfNeeded(), 30.seconds)
   }
 
@@ -37,17 +36,24 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     }
   }
 
-  "The DAO" should "create a database file if none exists" in {
+  "A newly initialised DAO" should "create a database file if none exists" in {
+    Given("no database file exists")
+    cleanWorkingDir()
+
+    When("the DAO is initialised")
     initialiseNewDb()
 
     Then("a new database file is created")
     assert(Files.isRegularFile(dbPath), dbPath)
   }
 
-  it should "create the empty tables on DB initialisation" in {
+  it should "create the empty tables" in {
+    Given("no database exists")
+
+    When("the DAO is initialised")
     initialiseNewDb()
 
-    Then("the tables are created")
+    Then("the expected tables are created")
     val listTables: Future[Vector[MTable]] = dao.database.run(MTable.getTables)
     val tableMetadata: Vector[MTable] = Await.result(listTables, 1.second)
     val actualTableNames: Set[String] = tableMetadata
@@ -58,5 +64,52 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     val expectedTableNames: Set[String] = Set("PageQueries", "Answers", "PDFLinkBundles", "Estimates")
 
     assert(actualTableNames == expectedTableNames)
+  }
+
+  it should "have not queried any Estimates" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    Then("the DAO has recorded no page queries")
+
+    val haveQueriedTheEstimates = Await.result(dao.haveEverQueried(ExampleEstimates.AG_2015_BUDGET), 30.seconds)
+    assert(!haveQueriedTheEstimates)
+  }
+
+  it should "have no registered Estimates" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    Then("the DAO has no registered Estimates")
+    val estimates = Await.result(dao.listEstimates, 30.seconds)
+
+    assert(estimates.isEmpty)
+  }
+
+  "The DAO" should "record an Estimates" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    When("an estimates is recorded")
+    Await.result(dao.registerEstimates(ExampleEstimates.COMMUNICATIONS_2015_BUDGET), 30.seconds)
+
+    Then("that estimates should be listed by the DAO on request")
+    val estimates = Await.result(dao.listEstimates, 30.seconds)
+
+    assert(estimates == Set(ExampleEstimates.COMMUNICATIONS_2015_BUDGET))
+  }
+
+  it should "forbid the registration of duplicate estimates" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    And("an estimates is added")
+    Await.result(dao.registerEstimates(ExampleEstimates.COMMUNICATIONS_2015_BUDGET), 30.seconds)
+
+    When("a duplicate estimates is added")
+    Then("an exception occurs")
+    intercept[SQLException] {
+      Await.result(dao.registerEstimates(ExampleEstimates.COMMUNICATIONS_2015_BUDGET), 30.seconds)
+    }
   }
 }

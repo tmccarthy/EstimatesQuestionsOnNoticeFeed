@@ -16,7 +16,7 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
 
   val estimates = estimatesToTest.cloneWithUrl(resourceURL)
 
-  s"for the ${estimates.portfolio.name} ${estimates.description} estimates held on ${estimates.hearingDates}" - {
+  s"for the ${estimates.portfolio.name} ${estimates.description} estimates held on ${estimates.firstDay}" - {
     "in the extracted set of answers" - {
       val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
 
