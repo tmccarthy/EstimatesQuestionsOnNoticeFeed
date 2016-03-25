@@ -14,7 +14,7 @@ class TreasuryEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "first",
-      getAnswer = _.headOption,
+      findAnswerIn = _.headOption,
       qonNumber = "1",
       divisionOrAgency = "Small Business Tax Division",
       senator = "Wong, Penny",
@@ -25,7 +25,7 @@ class TreasuryEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "94th",
-      getAnswer = answers => if (answers.size >= 94) Option.apply(answers(93)) else Option.empty,
+      findAnswerIn = answers => if (answers.size >= 94) Option.apply(answers(93)) else Option.empty,
       qonNumber = "155-162",
       divisionOrAgency = "Australian Taxation Office",
       senator = "Xenophon, Nick",
@@ -36,7 +36,7 @@ class TreasuryEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "last",
-      getAnswer = _.lastOption,
+      findAnswerIn = _.lastOption,
       qonNumber = "543",
       divisionOrAgency = "Australian Securities and Investment Commission",
       senator = "McAllister, Jenny",

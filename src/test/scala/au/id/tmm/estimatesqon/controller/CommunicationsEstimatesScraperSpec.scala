@@ -14,7 +14,7 @@ class CommunicationsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "first",
-      getAnswer = _.headOption,
+      findAnswerIn = _.headOption,
       qonNumber = "1",
       divisionOrAgency = "Programme 1.1",
       senator = "Carr",
@@ -25,13 +25,13 @@ class CommunicationsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "last",
-      getAnswer = _.lastOption,
+      findAnswerIn = _.lastOption,
       qonNumber = "138",
       divisionOrAgency = "Portfolio wide",
       senator = "Ludwig",
       topic = "Departmental Dispute Resolution",
       pdfURL = Option.apply("http://www.aph.gov.au/~/media/Committees/ec_ctte/estimates/bud_1516/communications/q138_ACMA.pdf"),
-      dateReceived = Option.apply(LocalDate.of(2015, 7, 9))
+      dateReceived = Option.apply(LocalDate.of(2015, 7, 28))
     )
   )
 ) {

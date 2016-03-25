@@ -1,7 +1,7 @@
 package au.id.tmm.estimatesqon.model
 
 import java.net.URL
-import java.time.{Period, Month, LocalDate}
+import java.time.{LocalDate, Month}
 
 import au.id.tmm.estimatesqon.controller.TestResources
 import org.scalatest.FreeSpec
@@ -19,9 +19,9 @@ class AnswerUpdateSpec extends FreeSpec {
                     senator: Option[String] = Some("Carr"),
                     topic: Option[String] = Some("General"),
                     pdfURLs: Seq[URL] = Seq.empty,
-                    dateReceived: Seq[LocalDate] = Seq.empty): Answer = {
+                    datesReceived: Set[LocalDate] = Set.empty): Answer = {
 
-    Answer.create(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, dateReceived)
+    Answer.create(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, datesReceived)
   }
 
   "an update including data for an existing Answer" - {
@@ -96,8 +96,8 @@ class AnswerUpdateSpec extends FreeSpec {
 
   "an update from an answer without a pdf link or a date answered value to an answer with a date answered value but " +
     "no pdf link" - {
-    val oldAnswer = defaultAnswer(pdfURLs = Seq.empty, dateReceived = Seq.empty)
-    val newAnswer = defaultAnswer(pdfURLs = Seq.empty, dateReceived = Seq(LocalDate.of(2015, Month.AUGUST, 23)))
+    val oldAnswer = defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set.empty)
+    val newAnswer = defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set(LocalDate.of(2015, Month.AUGUST, 23)))
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 

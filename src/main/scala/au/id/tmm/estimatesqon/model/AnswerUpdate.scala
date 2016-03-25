@@ -39,7 +39,7 @@ object AnswerUpdate {
     } else if (oldAnswer.get.pdfURLs.isEmpty && newAnswer.get.pdfURLs.nonEmpty) {
       AnswerUpdateType.ANSWERED
 
-    } else if (oldAnswer.get.datesReceived.isEmpty && newAnswer.get.datesReceived.nonEmpty) {
+    } else if (oldAnswer.get.latestDateReceived.isEmpty && newAnswer.get.latestDateReceived.nonEmpty) {
       AnswerUpdateType.MARKED_AS_ANSWERED
 
     } else if (oldAnswer.get.hasDifferentAnswerDetailsTo(newAnswer.get)) {

@@ -1,107 +1,73 @@
 package au.id.tmm.estimatesqon.controller
 
 import java.net.URL
-import java.time.LocalDate
 
-import au.id.tmm.estimatesqon.model.{Answer, Estimates, Portfolio}
-import org.scalatest.FreeSpec
-
-import scala.io.Source
+import au.id.tmm.estimatesqon.model.{Answer, Estimates}
+import org.scalatest.{FlatSpec, GivenWhenThen}
 
 private[controller] abstract class AbstractEstimatesScraperSpec protected (val estimatesToTest: Estimates,
                                                                            val resourceURL: URL,
                                                                            val expectedNumAnswers: Int,
                                                                            val answerAssertions: Iterable[AnswerAssertionInfo]
-                                                                          ) extends FreeSpec {
+                                                                          ) extends FlatSpec with GivenWhenThen {
 
   val estimates = estimatesToTest.cloneWithUrl(resourceURL)
 
-  s"for the ${estimates.portfolio.name} ${estimates.description} estimates held on ${estimates.firstDay}" - {
-    "in the extracted set of answers" - {
-      val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
+  val estimatesTestDescription = s"${estimates.portfolio.name} ${estimates.description} estimates " +
+    s"held on ${estimates.firstDay}"
 
-      val answers: List[Answer] = scraper.extractAnswers.toList
+  val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
+  val scrapedAnswers: List[Answer] = scraper.extractAnswers.toList
 
-      s"there should be $expectedNumAnswers elements" in {
-        assert(answers.size === expectedNumAnswers)
-      }
-
-      answerAssertions.foreach(answerAssertionInfo => {
-        s"for the ${answerAssertionInfo.answerDescription} answer" - {
-
-          val answer = answerAssertionInfo.getAnswer(answers)
-
-          answerAssertions(answer, answerAssertionInfo)
-        }
-      })
-    }
+  s"The set of answers extracted from the $estimatesTestDescription" should s"have $expectedNumAnswers answers" in {
+    assert(scrapedAnswers.size === expectedNumAnswers)
   }
 
-  def answerAssertions(answer: Option[Answer],
-                       answerAssertionInfo: AnswerAssertionInfo): Unit = {
+  answerAssertions.foreach(answerAssertionInfo => {
+    val answer = answerAssertionInfo.findAnswerIn(scrapedAnswers)
 
-    assertExists(answer)
-
-    if (answer.isDefined) {
-      questionOnNoticeNumberAssertions(answer.get, answerAssertionInfo.qonNumber)
-      agencyAssertions(answer.get, answerAssertionInfo.divisionOrAgency)
-      senatorAssertions(answer.get, answerAssertionInfo.senator)
-      topicAssertions(answer.get, answerAssertionInfo.topic)
-      pdfURLAssertions(answer.get, answerAssertionInfo.pdfURL)
-      dateReceivedAssertions(answer.get, answerAssertionInfo.dateReceived)
-    }
-  }
-
-  def assertExists(answer: Option[Answer]): Unit = {
-    "the answer exists" in {
+    s"The ${answerAssertionInfo.answerDescription} answer" should "exist" in {
       assert(answer.isDefined)
     }
-  }
 
-  def questionOnNoticeNumberAssertions(answer: Answer, qonNumber: String): Unit = {
-    s"the question on notice number should be $qonNumber" in {
-      assert(answer.qonIdentifier === qonNumber)
+    it should s"have ${answerAssertionInfo.qonNumber} as the qon number" in {
+      assert(answer.get.qonIdentifier === answerAssertionInfo.qonNumber)
     }
-  }
 
-  def agencyAssertions(answer: Answer, divisionOrAgency: String): Unit = {
-    s"the division or agency should be $divisionOrAgency" in {
-      assert(answer.divisionOrAgency === Option.apply(divisionOrAgency))
+    it should s"have ${answerAssertionInfo.divisionOrAgency} as the division" in {
+      assert(answer.get.divisionOrAgency === Some(answerAssertionInfo.divisionOrAgency))
     }
-  }
 
-  def senatorAssertions(answer: Answer, senator: String): Unit = {
-    s"the Senator should be '$senator'" in {
-      assert(answer.senator === Option.apply(senator))
+    it should s"have ${answerAssertionInfo.senator} as the senator" in {
+      assert(answer.get.senator === Some(answerAssertionInfo.senator))
     }
-  }
 
-  def topicAssertions(answer: Answer, topic: String): Unit = {
-    s"the topic should be '$topic'" in {
-      assert(answer.topic === Option.apply(topic))
+    it should s"have ${answerAssertionInfo.topic} as the topic" in {
+      assert(answer.get.topic === Some(answerAssertionInfo.topic))
     }
-  }
 
-  def pdfURLAssertions(answer: Answer, pdfURL: Option[String]): Unit = {
-    val expectedPDFURLDisplay = if (pdfURL.isDefined) s"<$pdfURL>" else "absent"
-    s"the first pdf URL should be $expectedPDFURLDisplay" in {
+    val expectedPDFURLDisplay = if (answerAssertionInfo.pdfURL.isDefined) s"<$answerAssertionInfo.pdfURL>" else "absent"
 
-      if (pdfURL.isDefined) {
-        assert(answer.pdfURLs.headOption.map(_.toString) === pdfURL)
+    it should s"have $expectedPDFURLDisplay as the first PDF" in {
+      if (answerAssertionInfo.pdfURL.isDefined) {
+        assert(answer.get.pdfURLs.headOption.map(_.toString) === answerAssertionInfo.pdfURL)
       } else {
-        assert(answer.pdfURLs.isEmpty)
+        assert(answer.get.pdfURLs.isEmpty)
       }
     }
-  }
 
-  def dateReceivedAssertions(answer: Answer, dateReceived: Option[LocalDate]): Unit = {
-    val expectedDateReceivedDisplay = if (dateReceived.isDefined) dateReceived.toString else "absent"
-    s"the first date received should be $expectedDateReceivedDisplay" in {
-      if (dateReceived.isDefined) {
-        assert(answer.datesReceived.headOption === dateReceived)
+    val expectedDateReceivedDisplay = if (answerAssertionInfo.dateReceived.isDefined) {
+      answerAssertionInfo.dateReceived.get.toString
+    } else {
+      "absent"
+    }
+
+    it should s"have a latest date received of $expectedDateReceivedDisplay" in {
+      if (answerAssertionInfo.dateReceived.isDefined) {
+        assert(answer.get.latestDateReceived === answerAssertionInfo.dateReceived)
       } else {
-        assert(answer.datesReceived.isEmpty)
+        assert(answer.get.latestDateReceived.isEmpty)
       }
     }
-  }
+  })
 }

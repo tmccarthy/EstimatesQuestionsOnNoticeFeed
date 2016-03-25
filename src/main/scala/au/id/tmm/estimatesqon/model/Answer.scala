@@ -10,7 +10,7 @@ case class Answer protected (val estimates: Estimates,
                         val senator: Option[String],
                         val topic: Option[String],
                         val pdfURLs: Seq[URL],
-                        val datesReceived: Seq[LocalDate]
+                        val latestDateReceived: Option[LocalDate]
                          ) {
 
   def hasDifferentQONIdentifierTo(that: Answer): Boolean = {
@@ -22,7 +22,7 @@ case class Answer protected (val estimates: Estimates,
       senator != that.senator ||
       topic != that.topic ||
       pdfURLs != that.pdfURLs ||
-      datesReceived != that.datesReceived
+      latestDateReceived != that.latestDateReceived
   }
 }
 
@@ -33,7 +33,37 @@ object Answer {
              senator: Option[String],
              topic: Option[String],
              pdfURLs: Seq[URL],
-             dateReceived: Seq[LocalDate]): Answer = {
-    new Answer(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, dateReceived)
+             datesReceived: Set[LocalDate]): Answer = {
+    new Answer(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, extractLatestFrom(datesReceived))
+  }
+
+  def create(estimates: Estimates,
+             qonNumber: String,
+             divisionOrAgency: Option[String],
+             senator: Option[String],
+             topic: Option[String],
+             pdfURLs: Seq[URL],
+             latestDateReceived: Option[LocalDate]): Answer = {
+    new Answer(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, latestDateReceived)
+  }
+
+  private def extractLatestFrom(dates: Set[LocalDate]): Option[LocalDate] = {
+    if (dates.isEmpty) {
+      None
+    } else {
+      Some(dates.max(localDateOrdering))
+    }
+  }
+
+  private val localDateOrdering = new Ordering[LocalDate] {
+    override def compare(left: LocalDate, right: LocalDate): Int = {
+      if (left.isBefore(right)) {
+        -1
+      } else if (left.isAfter(right)) {
+        1
+      } else {
+        0
+      }
+    }
   }
 }

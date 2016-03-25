@@ -13,6 +13,7 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.{Document, Element}
 import org.jsoup.select.Elements
 
+import scala.collection.SortedSet
 import scala.io.Source
 
 private[controller] class EstimatesScraper protected (val estimates: Estimates) {
@@ -68,7 +69,10 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
     val senator: Option[String] = answerColumnInfo.extractSenator(questionsOnNoticeTableRow)
     val topic: Option[String] = answerColumnInfo.extractTopic(questionsOnNoticeTableRow)
     val pdfs: Seq[URL] = answerColumnInfo.extractPDFs(questionsOnNoticeTableRow).getOrElse(Seq.empty)
-    val date: Seq[LocalDate] = answerColumnInfo.extractDates(questionsOnNoticeTableRow).getOrElse(Seq.empty)
+
+    val datesReceived: Set[_ <: LocalDate] = answerColumnInfo
+      .extractDates(questionsOnNoticeTableRow)
+      .getOrElse(Set.empty)
 
     if (qonNumber.isDefined) {
       val answer: Answer = Answer.create(
@@ -78,7 +82,7 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
         senator,
         topic,
         pdfs,
-        date)
+        datesReceived.lastOption)
 
       Some(answer)
     } else {

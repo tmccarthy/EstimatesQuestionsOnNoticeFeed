@@ -14,7 +14,7 @@ class AttorneyGeneralsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "first",
-      getAnswer = _.headOption,
+      findAnswerIn = _.headOption,
       qonNumber = "BE15/001",
       divisionOrAgency = "AC",
       senator = "Collins",
@@ -25,7 +25,7 @@ class AttorneyGeneralsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "20th",
-      getAnswer = answers => if (answers.size >= 20) Option.apply(answers(19)) else Option.empty,
+      findAnswerIn = answers => if (answers.size >= 20) Option.apply(answers(19)) else Option.empty,
       qonNumber = "BE15/020",
       divisionOrAgency = "AGD",
       senator = "Bilyk",
@@ -36,7 +36,7 @@ class AttorneyGeneralsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "last",
-      getAnswer = _.lastOption,
+      findAnswerIn = _.lastOption,
       qonNumber = "BE15/115",
       divisionOrAgency = "AGD",
       senator = "Ludwig",

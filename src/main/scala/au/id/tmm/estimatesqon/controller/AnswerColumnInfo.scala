@@ -10,6 +10,8 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.Element
 import StringUtils._
 
+import scala.collection.SortedSet
+
 private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
                                   val divisionOrAgencyCol: Option[Int],
                                   val senatorCol: Option[Int],
@@ -44,11 +46,11 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
       .map(linkString => new URL("http://www.aph.gov.au" + linkString))
   }
 
-  def extractDates: Element => Option[Seq[LocalDate]] = extractCellValueFromText(dateCol)(string => {
+  def extractDates: Element => Option[Set[LocalDate]] = extractCellValueFromText(dateCol)(string => {
     val dateText: String = string.replaceAll("\u00a0", "")
 
     if (dateText.isEmpty) {
-      Seq.empty
+      Set.empty[LocalDate]
     } else {
 
       val dateStrings: Stream[String] = dateText.split("&").toStream.map(_.trim)
@@ -57,7 +59,7 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
         .flatMap(dateString => DateUtils.parseDate(dateString,
         primaryDateFormat, secondaryDateFormat, tertiaryDateFormat))
 
-      dates.toSeq
+      Set(dates: _*)
     }
   })
 

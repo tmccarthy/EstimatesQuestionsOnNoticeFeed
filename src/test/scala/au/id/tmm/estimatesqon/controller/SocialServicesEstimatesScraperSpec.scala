@@ -14,7 +14,7 @@ class SocialServicesEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "first",
-      getAnswer = _.headOption,
+      findAnswerIn = _.headOption,
       qonNumber = "SQ15-000340",
       divisionOrAgency = "3 - Ageing",
       senator = "Polley",
@@ -25,7 +25,7 @@ class SocialServicesEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
 
     new AnswerAssertionInfo(
       answerDescription = "last",
-      getAnswer = _.lastOption,
+      findAnswerIn = _.lastOption,
       qonNumber = "NDIA SQ15-000102",
       divisionOrAgency = "5 - Disability",
       senator = "Siewert",
