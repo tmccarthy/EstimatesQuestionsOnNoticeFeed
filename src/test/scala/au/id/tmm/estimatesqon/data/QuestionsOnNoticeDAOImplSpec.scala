@@ -61,7 +61,7 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
       .toSet
       .filterNot(_ == "sqlite_sequence")
 
-    val expectedTableNames: Set[String] = Set("PageQueries", "Answers", "PDFLinkBundles", "Estimates")
+    val expectedTableNames: Set[String] = Set("Answers", "PDFLinkBundles", "Estimates")
 
     assert(actualTableNames == expectedTableNames)
   }

@@ -12,15 +12,7 @@ private[data] case class EstimatesRow(estimatesID: Long,
                         description: String,
                         firstDay: Date,
                         lastDay: Date,
-                        pageURL: String) {
-
-  lazy val asEstimates: Estimates = Estimates.create(
-    Portfolio.withName(portfolioName),
-    description,
-    new URL(pageURL),
-    firstDay,
-    lastDay)
-}
+                        pageURL: String)
 
 class EstimatesTable(tag: Tag) extends Table[EstimatesRow](tag, "Estimates") {
 
@@ -31,9 +23,7 @@ class EstimatesTable(tag: Tag) extends Table[EstimatesRow](tag, "Estimates") {
   def lastDay = column[Date]("lastDay")
   def pageURL = column[String]("pageURL")
 
-  def answerUpdates = foreignKey("ANSWER_UPDATES_FK", estimatesID, TableQuery[AnswersTable])(_.estimatesID)
-
-  def pageQueries = foreignKey("PAGE_QUERIES_FK", pageURL, TableQuery[PageQueriesTable])(_.url)
+  def joinedAnswers = foreignKey("ANSWERS_FK", estimatesID, TableQuery[AnswersTable])(_.estimatesID)
 
   def naturalIndex = index("IDX_NATURAL", (portfolioName, firstDay), unique = true)
 

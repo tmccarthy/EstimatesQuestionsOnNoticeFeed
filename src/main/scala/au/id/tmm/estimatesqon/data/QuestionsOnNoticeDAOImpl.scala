@@ -1,9 +1,10 @@
 package au.id.tmm.estimatesqon.data
 
 import java.sql.Date
+import java.time.Instant
 
 import au.id.tmm.estimatesqon.data.databasemodel._
-import au.id.tmm.estimatesqon.model.{Estimates, Answer, AnswerUpdateBundle}
+import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdateBundle, Estimates}
 import slick.driver.SQLiteDriver.api._
 import slick.jdbc.meta.MTable
 import slick.lifted.TableQuery
@@ -35,11 +36,9 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
   protected def createTablesAction(): DBIO[Unit] = {
     val answerUpdates = TableQuery[AnswersTable]
     val estimates = TableQuery[databasemodel.EstimatesTable]
-    val pageQueries = TableQuery[PageQueriesTable]
     val pdfLinkBundles = TableQuery[PDFLinkBundlesTable]
 
     (estimates.schema ++
-      pageQueries.schema ++
       pdfLinkBundles.schema ++
       answerUpdates.schema).create
   }
@@ -64,12 +63,12 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
 
     val rowsFuture: Future[Seq[EstimatesRow]] = database.run(query.result)
 
-    rowsFuture.map(_.map(_.asEstimates).toSet)
+    rowsFuture.map(_.map(RowToModelConversions.estimatesFromDbRow).toSet)
   }
 
   override def haveEverQueried(estimates: Estimates): Future[Boolean] = {
-    val query = TableQuery[PageQueriesTable]
-      .filter(_.url === estimates.pageURL.toString)
+    val query = TableQuery[AnswersTable]
+      .filter(_.joinedEstimates.filter(_.pageURL === estimates.pageURL.toString).exists)
       .exists
 
     database.run(query.result)
