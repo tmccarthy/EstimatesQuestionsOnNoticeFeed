@@ -4,7 +4,8 @@ import java.nio.file.{Files, Paths}
 import java.sql.SQLException
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
-import au.id.tmm.estimatesqon.model.ExampleEstimates
+import au.id.tmm.estimatesqon.controller.{EstimatesScraper, TestResources}
+import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, ExampleEstimates}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import slick.jdbc.meta.MTable
@@ -111,5 +112,27 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     intercept[SQLException] {
       Await.result(dao.registerEstimates(ExampleEstimates.COMMUNICATIONS_2015_BUDGET), 30.seconds)
     }
+  }
+
+  it should "correctly write an answer update bundle" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    And("a registered Estimates")
+    val estimates = ExampleEstimates.COMMUNICATIONS_2015_BUDGET
+      .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
+
+    Await.result(dao.registerEstimates(estimates), 30.seconds)
+
+    When("an answer update bundle is written")
+    val answers: Set[Answer] = EstimatesScraper.forEstimates(estimates).extractAnswers.toSet
+    val updates: Set[AnswerUpdate] = answers.map(AnswerUpdate.forExistingAnswer)
+    val updateBundle: AnswerUpdateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
+    Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
+
+    Then("The written answers have the correct details")
+    val storedAnswers: Set[Answer] = Await.result(dao.retrieveLatestAnswersFor(estimates), 30.seconds)
+
+    assert(answers === storedAnswers)
   }
 }

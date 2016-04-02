@@ -1,6 +1,7 @@
 package au.id.tmm.estimatesqon.controller
 
 import java.net.URL
+import java.time.{Duration, Instant}
 
 import au.id.tmm.estimatesqon.model.{Answer, Estimates}
 import org.scalatest.{FlatSpec, GivenWhenThen}
@@ -68,6 +69,15 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
       } else {
         assert(answer.get.latestDateReceived.isEmpty)
       }
+    }
+
+    it should s"have a timestamp that is almost exactly ${Instant.now()}" in {
+      val expectedTimestamp = Instant.now()
+      val actualTimestamp = answer.get.scrapedTimestamp
+
+      val difference = Duration.between(expectedTimestamp, actualTimestamp).abs()
+
+      assert(difference.toMillis < Duration.ofSeconds(1).toMillis)
     }
   })
 }

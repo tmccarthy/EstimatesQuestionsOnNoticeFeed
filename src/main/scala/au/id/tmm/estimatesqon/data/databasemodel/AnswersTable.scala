@@ -2,8 +2,8 @@ package au.id.tmm.estimatesqon.data.databasemodel
 
 import java.sql.Date
 
-import slick.lifted.Tag
 import slick.driver.SQLiteDriver.api._
+import slick.lifted.Tag
 
 private[data] case class AnswerRow(answerID: Long,
                                    estimatesID: Long,
@@ -21,7 +21,7 @@ private[data] case class AnswerRow(answerID: Long,
 
 class AnswersTable(tag: Tag) extends Table[AnswerRow](tag, "Answers") {
 
-  def answerID = column[Long]("answerID", O.PrimaryKey)
+  def answerID = column[Long]("answerID", O.PrimaryKey, O.AutoInc)
   def estimatesID = column[Long]("estimatesID")
 
   def queryTimestamp = column[Long]("queryTimestamp")
@@ -31,7 +31,7 @@ class AnswersTable(tag: Tag) extends Table[AnswerRow](tag, "Answers") {
   def division = column[Option[String]]("division")
   def senator = column[Option[String]]("senator")
   def topic = column[Option[String]]("topic")
-  def latestDateReceived = column[Option[Date]]("datesReceivedListID")
+  def latestDateReceived = column[Option[Date]]("latestDateReceived")
 
   def pdfLinksBundleID = column[Option[Long]]("pdfLinksBundleID")
 

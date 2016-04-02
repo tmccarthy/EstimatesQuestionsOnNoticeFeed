@@ -1,17 +1,21 @@
 package au.id.tmm.estimatesqon.model
 
 import java.net.URL
-import java.time.LocalDate
+import java.time.{Instant, LocalDate}
+import java.util.Date
 
-case class Answer protected (val estimates: Estimates,
-                        val qonIdentifier: String,
+import au.id.tmm.estimatesqon.utils.DateUtils.ImprovedLocalDate
 
-                        val divisionOrAgency: Option[String],
-                        val senator: Option[String],
-                        val topic: Option[String],
-                        val pdfURLs: Seq[URL],
-                        val latestDateReceived: Option[LocalDate]
-                         ) {
+case class Answer protected (estimates: Estimates,
+                             qonIdentifier: String,
+                             scrapedTimestamp: Instant,
+
+                             divisionOrAgency: Option[String],
+                             senator: Option[String],
+                             topic: Option[String],
+                             pdfURLs: Seq[URL],
+                             latestDateReceived: Option[LocalDate]
+                            ) {
 
   def hasDifferentQONIdentifierTo(that: Answer): Boolean = {
     qonIdentifier != that.qonIdentifier
@@ -24,27 +28,47 @@ case class Answer protected (val estimates: Estimates,
       pdfURLs != that.pdfURLs ||
       latestDateReceived != that.latestDateReceived
   }
+
+  val latestDateReceivedOldDateType: Option[Date] = latestDateReceived
+    .map(_.toOldDateAtZone(Estimates.estimatesTimeZone))
 }
 
 object Answer {
+  // TODO delete?
   def create(estimates: Estimates,
              qonNumber: String,
+             scrapedTimestamp: Instant,
              divisionOrAgency: Option[String],
              senator: Option[String],
              topic: Option[String],
              pdfURLs: Seq[URL],
              datesReceived: Set[LocalDate]): Answer = {
-    new Answer(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, extractLatestFrom(datesReceived))
+    new Answer(estimates,
+      qonNumber,
+      scrapedTimestamp,
+      divisionOrAgency,
+      senator,
+      topic,
+      pdfURLs,
+      extractLatestFrom(datesReceived))
   }
 
   def create(estimates: Estimates,
              qonNumber: String,
+             scrapedTimestamp: Instant,
              divisionOrAgency: Option[String],
              senator: Option[String],
              topic: Option[String],
              pdfURLs: Seq[URL],
              latestDateReceived: Option[LocalDate]): Answer = {
-    new Answer(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, latestDateReceived)
+    new Answer(estimates,
+      qonNumber,
+      scrapedTimestamp,
+      divisionOrAgency,
+      senator,
+      topic,
+      pdfURLs,
+      latestDateReceived)
   }
 
   private def extractLatestFrom(dates: Set[LocalDate]): Option[LocalDate] = {

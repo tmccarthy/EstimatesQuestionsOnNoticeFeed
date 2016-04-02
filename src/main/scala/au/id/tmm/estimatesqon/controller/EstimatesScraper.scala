@@ -1,11 +1,9 @@
 package au.id.tmm.estimatesqon.controller
 
 import java.net.URL
-import java.time.LocalDate
+import java.time.{Instant, LocalDate}
 
-import au.id.tmm.estimatesqon.data.databasemodel.{AnswerRow, EstimatesRow}
 import au.id.tmm.estimatesqon.model.{Answer, Estimates}
-import au.id.tmm.estimatesqon.utils.StringUtils
 import au.id.tmm.estimatesqon.utils.StringUtils.InstanceStringUtils
 import net.ruippeixotog.scalascraper.browser.Browser
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
@@ -13,13 +11,13 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.{Document, Element}
 import org.jsoup.select.Elements
 
-import scala.collection.SortedSet
 import scala.io.Source
 
-private[controller] class EstimatesScraper protected (val estimates: Estimates) {
+class EstimatesScraper protected (val estimates: Estimates) {
 
   def extractAnswers: Seq[Answer] = {
     val pageSource: Source = Source.fromURL(estimates.pageURL)
+    val timestamp = Instant.now()
 
     val htmlAsString: String = pageSource.getLines().fold("")((left, right) => left + "\n" + right)
 
@@ -32,7 +30,7 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
 
     val tableRows: Elements = questionsOnNoticeTable.get.children.first.children
 
-    val answers: Seq[Answer] = answersFromTableRows(tableRows)
+    val answers: Seq[Answer] = answersFromTableRows(tableRows, timestamp)
 
     answers
   }
@@ -51,18 +49,23 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
     questionsOnNoticeTable
   }
 
-  private def answersFromTableRows(tableRows: Elements): Seq[Answer] = {
+  private def answersFromTableRows(tableRows: Elements, timestamp: Instant): Seq[Answer] = {
     val headerRow: Element = tableRows.head
     val answerColumnInfo: AnswerColumnInfo = AnswerColumnInfo.determineFromHeaderRow(headerRow)
 
     val contentRows = tableRows.drop(1)
 
-    val answers: Stream[Answer] = contentRows.map(answerFromContentRow(answerColumnInfo, _)).toStream.flatten
+    val answers: Stream[Answer] = contentRows
+      .map(answerFromContentRow(answerColumnInfo, _, timestamp))
+      .toStream
+      .flatten
 
     answers
   }
 
-  private def answerFromContentRow(answerColumnInfo: AnswerColumnInfo, questionsOnNoticeTableRow: Element): Option[Answer] = {
+  private def answerFromContentRow(answerColumnInfo: AnswerColumnInfo,
+                                   questionsOnNoticeTableRow: Element,
+                                   timestamp: Instant): Option[Answer] = {
 
     val qonNumber: Option[String] = answerColumnInfo.extractQONNumber(questionsOnNoticeTableRow)
     val divisionOrAgency: Option[String] = answerColumnInfo.extractDivisionOrAgency(questionsOnNoticeTableRow)
@@ -70,7 +73,7 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
     val topic: Option[String] = answerColumnInfo.extractTopic(questionsOnNoticeTableRow)
     val pdfs: Seq[URL] = answerColumnInfo.extractPDFs(questionsOnNoticeTableRow).getOrElse(Seq.empty)
 
-    val datesReceived: Set[_ <: LocalDate] = answerColumnInfo
+    val datesReceived: Set[LocalDate] = answerColumnInfo
       .extractDates(questionsOnNoticeTableRow)
       .getOrElse(Set.empty)
 
@@ -78,11 +81,12 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
       val answer: Answer = Answer.create(
         estimates,
         qonNumber.get,
+        timestamp,
         divisionOrAgency,
         senator,
         topic,
         pdfs,
-        datesReceived.lastOption)
+        datesReceived)
 
       Some(answer)
     } else {
@@ -91,6 +95,6 @@ private[controller] class EstimatesScraper protected (val estimates: Estimates) 
   }
 }
 
-private[controller] object EstimatesScraper {
+object EstimatesScraper {
   def forEstimates(estimates: Estimates) = new EstimatesScraper(estimates)
 }

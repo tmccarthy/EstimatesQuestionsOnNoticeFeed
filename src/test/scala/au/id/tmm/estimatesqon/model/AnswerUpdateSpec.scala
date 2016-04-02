@@ -1,12 +1,16 @@
 package au.id.tmm.estimatesqon.model
 
 import java.net.URL
-import java.time.{LocalDate, Month}
+import java.time._
 
 import au.id.tmm.estimatesqon.controller.TestResources
 import org.scalatest.FreeSpec
 
 class AnswerUpdateSpec extends FreeSpec {
+
+  private val SPECIAL_MOMENT: ZonedDateTime = ZonedDateTime.of(
+    LocalDateTime.of(2003, Month.JANUARY, 3, 5, 0),
+    ZoneId.of("Australia/Sydney"))
 
   private val portfolio = Portfolio.withName("Communications")
   private val estimates = ExampleEstimates
@@ -19,9 +23,17 @@ class AnswerUpdateSpec extends FreeSpec {
                     senator: Option[String] = Some("Carr"),
                     topic: Option[String] = Some("General"),
                     pdfURLs: Seq[URL] = Seq.empty,
+                    scrapedTimestamp: Instant = SPECIAL_MOMENT.toInstant,
                     datesReceived: Set[LocalDate] = Set.empty): Answer = {
 
-    Answer.create(estimates, qonNumber, divisionOrAgency, senator, topic, pdfURLs, datesReceived)
+    Answer.create(estimates,
+      qonNumber,
+      divisionOrAgency = divisionOrAgency,
+      senator = senator,
+      topic = topic,
+      pdfURLs = pdfURLs,
+      scrapedTimestamp = scrapedTimestamp,
+      datesReceived = datesReceived)
   }
 
   "an update including data for an existing Answer" - {
