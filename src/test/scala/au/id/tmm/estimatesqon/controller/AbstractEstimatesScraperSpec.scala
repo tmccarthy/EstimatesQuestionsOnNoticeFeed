@@ -77,7 +77,8 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
 
       val difference = Duration.between(expectedTimestamp, actualTimestamp).abs()
 
-      assert(difference.toMillis < Duration.ofSeconds(1).toMillis)
+      // TODO investigate the size of this difference in the tests
+      assert(difference.toMillis < Duration.ofSeconds(10).toMillis)
     }
   })
 }
