@@ -5,7 +5,7 @@ import java.sql.SQLException
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
 import au.id.tmm.estimatesqon.controller.{EstimatesScraper, TestResources}
-import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, ExampleEstimates}
+import au.id.tmm.estimatesqon.model.{AnswerUpdate, AnswerUpdateBundle, ExampleEstimates}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import slick.jdbc.meta.MTable
@@ -125,14 +125,18 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     Await.result(dao.registerEstimates(estimates), 30.seconds)
 
     When("an answer update bundle is written")
-    val answers: Set[Answer] = EstimatesScraper.forEstimates(estimates).extractAnswers.toSet
-    val updates: Set[AnswerUpdate] = answers.map(AnswerUpdate.forExistingAnswer)
-    val updateBundle: AnswerUpdateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
+    val answers = EstimatesScraper.forEstimates(estimates).extractAnswers.toSet
+    val updates = answers.map(AnswerUpdate.forExistingAnswer)
+    val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
     Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
 
     Then("The written answers have the correct details")
-    val storedAnswers: Set[Answer] = Await.result(dao.retrieveLatestAnswersFor(estimates), 30.seconds)
+    val storedAnswers = Await.result(dao.retrieveLatestAnswersFor(estimates), 30.seconds)
 
-    assert(answers === storedAnswers)
+    val missingAnswers = answers diff storedAnswers
+    val extraAnswers = storedAnswers diff missingAnswers
+
+    assert(answers === storedAnswers, s"The stored answers are missing $missingAnswers and have the following extra " +
+      s"answers $extraAnswers")
   }
 }
