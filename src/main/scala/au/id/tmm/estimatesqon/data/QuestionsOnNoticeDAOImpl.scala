@@ -5,6 +5,7 @@ import java.time.Instant
 
 import au.id.tmm.estimatesqon.data.databasemodel._
 import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, Estimates}
+import au.id.tmm.estimatesqon.utils.DateUtils.ImprovedOldDate
 import slick.driver.SQLiteDriver.api._
 import slick.jdbc.meta.MTable
 import slick.lifted.TableQuery
@@ -151,7 +152,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
           row.senator,
           row.topic,
           row.pdfLinksBundleID.map(pdfsMap(_)).getOrElse(Seq.empty),
-          row.latestDateReceived.map(_.toLocalDate))
+          row.latestDateReceived.map(_.toLocalDateAtZone(Estimates.estimatesTimeZone)))
       }).toSet
   }
 
