@@ -36,5 +36,4 @@ object DateUtils {
 
     def toSqlDate: java.sql.Date = new java.sql.Date(date.getTime)
   }
-
 }

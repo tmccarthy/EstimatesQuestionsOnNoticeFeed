@@ -5,6 +5,7 @@ import java.time.{Instant, LocalDate}
 import java.util.Date
 
 import au.id.tmm.estimatesqon.utils.DateUtils.ImprovedLocalDate
+import au.id.tmm.estimatesqon.utils.LocalDateOrdering
 
 case class Answer protected (estimates: Estimates,
                              qonIdentifier: String,
@@ -74,19 +75,7 @@ object Answer {
     if (dates.isEmpty) {
       None
     } else {
-      Some(dates.max(localDateOrdering))
-    }
-  }
-
-  private val localDateOrdering = new Ordering[LocalDate] {
-    override def compare(left: LocalDate, right: LocalDate): Int = {
-      if (left.isBefore(right)) {
-        -1
-      } else if (left.isAfter(right)) {
-        1
-      } else {
-        0
-      }
+      Some(dates.max(LocalDateOrdering))
     }
   }
 }
