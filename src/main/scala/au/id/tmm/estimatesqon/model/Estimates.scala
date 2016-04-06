@@ -32,7 +32,6 @@ object Estimates {
       firstDay.toLocalDateAtZone(estimatesTimeZone),
       lastDay.toLocalDateAtZone(estimatesTimeZone))
 
-  // TODO refactor this. The method has too many parameters
   def create(portfolio: Portfolio, description: String, pageURL: URL, firstDay: LocalDate, lastDay: LocalDate): Estimates =
     new Estimates(portfolio,
       description,

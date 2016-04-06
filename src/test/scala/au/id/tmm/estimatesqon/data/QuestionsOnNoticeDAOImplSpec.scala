@@ -139,4 +139,25 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     assert(answers === storedAnswers, s"The stored answers are missing $missingAnswers and have the following extra " +
       s"answers $extraAnswers")
   }
+
+  it should "reject an answer update bundle for an unregistered Estimates" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    And("an unregistered Estimates")
+    val estimates = ExampleEstimates.COMMUNICATIONS_2015_BUDGET
+      .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
+
+    When("an answer update bundle is written")
+    val answers = EstimatesScraper.forEstimates(estimates).extractAnswers.toSet
+    val updates = answers.map(AnswerUpdate.forExistingAnswer)
+    val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
+
+    Then("the write should throw")
+    val interceptedException = intercept[UnregisteredEstimatesException] {
+      Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
+    }
+
+    assert(interceptedException.estimates === estimates)
+  }
 }

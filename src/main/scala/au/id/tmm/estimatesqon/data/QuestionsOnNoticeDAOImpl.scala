@@ -1,11 +1,7 @@
 package au.id.tmm.estimatesqon.data
 
-import java.net.URL
-import java.time.Instant
-
 import au.id.tmm.estimatesqon.data.databasemodel._
 import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, Estimates}
-import au.id.tmm.estimatesqon.utils.DateUtils.ImprovedOldDate
 import slick.driver.SQLiteDriver.api._
 import slick.jdbc.meta.MTable
 import slick.lifted.TableQuery
@@ -14,7 +10,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
-// TODO reduce the size of these methods
 class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends QuestionsOnNoticeDAO {
 
   val database = Database.forConfig(dbConfigName)
@@ -46,25 +41,26 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
       answerUpdates.schema).create
   }
 
-  // TODO refactor
+  private def lookupRowFor(estimates: Estimates): Future[Option[EstimatesRow]] = {
+    val query = TableQuery[EstimatesTable]
+      .filter(_.pageURL === estimates.pageURL.toString)
+
+    database.run(query.result).map(_.headOption)
+  }
+
   override def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit] = {
     val estimates: Estimates = updateBundle.estimates
 
     lookupRowFor(estimates).flatMap(estimatesRow => {
-      // todo check that the estimatesRow is actually present
+
+      if (estimatesRow.isEmpty) {
+        throw new UnregisteredEstimatesException(estimates)
+      }
 
       val estimatesID: Long = estimatesRow.get.estimatesID
-      val rowsToInsert: Set[(AnswerRow, Seq[PDFLinkBundleRow])] = updateBundle
-        .updates
-        .zipWithIndex
-        .map{
-          case(answerUpdate, index) => constructRowsFor(answerUpdate, estimatesID, index)
-        }
+      val (answerRows, pdfLinkRows) = constructRowsToInsertFor(updateBundle, estimatesID)
 
-      val answerRows = rowsToInsert.map(_._1)
       val answerRowsInsert = database.run(TableQuery[AnswersTable] ++= answerRows)
-
-      val pdfLinkRows = rowsToInsert.flatMap(_._2)
       val pdfLinkRowsInsert = database.run(TableQuery[PDFLinkBundlesTable] ++= pdfLinkRows)
 
       pdfLinkRowsInsert
@@ -73,11 +69,19 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     })
   }
 
-  private def lookupRowFor(estimates: Estimates): Future[Option[EstimatesRow]] = {
-    val query = TableQuery[EstimatesTable]
-      .filter(_.pageURL === estimates.pageURL.toString)
+  private def constructRowsToInsertFor(updateBundle: AnswerUpdateBundle,
+                                       estimatesID: Long): (Set[AnswerRow], Set[PDFLinkBundleRow]) = {
+    val rowsToInsert: Set[(AnswerRow, Seq[PDFLinkBundleRow])] = updateBundle
+      .updates
+      .zipWithIndex
+      .map{
+        case(answerUpdate, index) => constructRowsFor(answerUpdate, estimatesID, index)
+      }
 
-    database.run(query.result).map(_.headOption)
+    val answerRows = rowsToInsert.map(_._1)
+    val pdfLinkRows = rowsToInsert.flatMap(_._2)
+
+    (answerRows, pdfLinkRows)
   }
 
   private def constructRowsFor(answerUpdate: AnswerUpdate, estimatesID: Long, answerID: Long): (AnswerRow, Seq[PDFLinkBundleRow]) = {
@@ -86,16 +90,16 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     val linkBundleID = Random.nextLong()
 
     val pdfs: Option[Seq[PDFLinkBundleRow]] = answerUpdate.newAnswer
-      .map(RowToModelConversions.pdfLinkBundleRowsFrom(_, linkBundleID))
+      .map(RowModelConversions.pdfLinkBundleRowsFrom(_, linkBundleID))
       .filter(_.nonEmpty)
 
-    val answerRow: AnswerRow = RowToModelConversions.answerUpdateToDbRow(answerUpdate, estimatesID, Some(linkBundleID).filter(_ => pdfs.isDefined), answerID)
+    val answerRow: AnswerRow = RowModelConversions.answerUpdateToDbRow(answerUpdate, estimatesID, Some(linkBundleID).filter(_ => pdfs.isDefined), answerID)
 
     (answerRow, pdfs.getOrElse(Seq.empty))
   }
 
   override def registerEstimates(estimates: Estimates): Future[Unit] = {
-    val newRow: EstimatesRow = RowToModelConversions.estimatesToDbRow(estimates)
+    val newRow: EstimatesRow = RowModelConversions.estimatesToDbRow(estimates)
 
     val query = TableQuery[EstimatesTable] += newRow
 
@@ -107,7 +111,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
 
     val rowsFuture: Future[Seq[EstimatesRow]] = database.run(query.result)
 
-    rowsFuture.map(_.map(RowToModelConversions.estimatesFromDbRow).toSet)
+    rowsFuture.map(_.map(RowModelConversions.estimatesFromDbRow).toSet)
   }
 
   override def haveEverQueried(estimates: Estimates): Future[Boolean] = {
@@ -120,7 +124,10 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
 
   override def retrieveLatestAnswersFor(estimates: Estimates): Future[Set[Answer]] = {
     lookupRowFor(estimates).flatMap(estimatesRow => {
-      // todo check that the estimatesRow is actually present
+
+      if (estimatesRow.isEmpty) {
+        throw new UnregisteredEstimatesException(estimates)
+      }
 
       val estimatesID = estimatesRow.get.estimatesID
 
@@ -129,37 +136,17 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
         .on((anAnswer, allMoreRecentAnswers) => anAnswer.qonNumber === allMoreRecentAnswers.qonNumber && anAnswer.queryTimestamp < allMoreRecentAnswers.queryTimestamp)
         .filter { case (anAnswer, allMoreRecentAnswers) => allMoreRecentAnswers.isEmpty }
         .map { case (anAnswer, allMoreRecentAnswers) => anAnswer }
+        .filter(_.estimatesID === estimatesID)
 
       val matchingPdfBundlesQuery = latestAnswersQuery.flatMap(_.joinedPdfLinksBundle)
 
       for {
         answerRows <- database.run(latestAnswersQuery.result)
         pdfBundleRows <- database.run(matchingPdfBundlesQuery.result)
-      } yield composeAnswersFrom(estimates, answerRows, pdfBundleRows)
+      } yield RowModelConversions.composeAnswersFrom(estimates, answerRows, pdfBundleRows)
     })
   }
 
-  // TODO move this onto RowToModelConversions
-  private def composeAnswersFrom(estimates: Estimates, answerRows: Seq[AnswerRow], pdfBundleRows: Seq[PDFLinkBundleRow]): Set[Answer] = {
-    val pdfsMap: Map[Long, Seq[URL]] = readIntoMap(pdfBundleRows)
-
-    answerRows
-      .map(row => {
-        Answer.create(estimates,
-          row.qonNumber,
-          Instant.ofEpochMilli(row.queryTimestamp),
-          row.division,
-          row.senator,
-          row.topic,
-          row.pdfLinksBundleID.map(pdfsMap(_)).getOrElse(Seq.empty),
-          row.latestDateReceived.map(_.toLocalDateAtZone(Estimates.estimatesTimeZone)))
-      }).toSet
-  }
-
-  private def readIntoMap(pdfBundleRows: Seq[PDFLinkBundleRow]): Map[Long, Seq[URL]] = {
-    pdfBundleRows.groupBy(_.pdfBundleID)
-      .map{ case (bundleID, bundleRows) => (bundleID, bundleRows.map(_.url).map(new URL(_)))}
-  }
 }
 
 object QuestionsOnNoticeDAOImpl {

@@ -34,7 +34,6 @@ case class Answer protected (estimates: Estimates,
 }
 
 object Answer {
-  // TODO delete?
   def create(estimates: Estimates,
              qonNumber: String,
              scrapedTimestamp: Instant,
