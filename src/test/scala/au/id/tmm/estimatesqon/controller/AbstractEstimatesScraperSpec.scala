@@ -17,6 +17,8 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
   val estimatesTestDescription = s"${estimates.portfolio.name} ${estimates.description} estimates " +
     s"held on ${estimates.firstDay}"
 
+  val expectedTimestamp = Instant.now()
+
   val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
   val scrapedAnswers: List[Answer] = scraper.extractAnswers.toList
 
@@ -71,14 +73,13 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
       }
     }
 
-    it should s"have a timestamp that is almost exactly ${Instant.now()}" in {
-      val expectedTimestamp = Instant.now()
+    it should s"have a timestamp that is almost exactly $expectedTimestamp" in {
       val actualTimestamp = answer.get.scrapedTimestamp
 
       val difference = Duration.between(expectedTimestamp, actualTimestamp).abs()
 
-      // TODO investigate the size of this difference in the tests
-      assert(difference.toMillis < Duration.ofSeconds(10).toMillis)
+      assert(difference.toMillis < Duration.ofMillis(100).toMillis,
+        s"Expected $expectedTimestamp, but got $actualTimestamp")
     }
   })
 }

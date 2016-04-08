@@ -2,15 +2,13 @@ package au.id.tmm.estimatesqon.controller
 
 import java.net.URL
 import java.time.LocalDate
-import java.time.format.{DateTimeParseException, DateTimeFormatter}
+import java.time.format.DateTimeFormatter
 
+import au.id.tmm.estimatesqon.utils.DateUtils
 import au.id.tmm.estimatesqon.utils.ElementUtils.InstanceElementUtils
-import au.id.tmm.estimatesqon.utils.{DateUtils, StringUtils}
+import au.id.tmm.estimatesqon.utils.StringUtils._
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.Element
-import StringUtils._
-
-import scala.collection.SortedSet
 
 private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
                                   val divisionOrAgencyCol: Option[Int],
@@ -35,7 +33,7 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
   def extractPDFs: Element => Option[Seq[URL]] = extractCellValue(pdfsCol)(cell => {
     val linkElements: List[Element] = cell.descendents.filter(_.tagName == "a").toList
 
-    val pdfs: Seq[URL] = linkElements.flatMap(pdfLinkFromLinkElement).toSeq
+    val pdfs: Seq[URL] = linkElements.flatMap(pdfLinkFromLinkElement)
 
     pdfs
   })
@@ -62,15 +60,6 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
       Set(dates: _*)
     }
   })
-
-  def dateFromDateString(dateString: String): LocalDate = {
-    try {
-      LocalDate.parse(dateString.trim, primaryDateFormat)
-    } catch {
-      case ex: DateTimeParseException =>
-        LocalDate.parse(dateString.trim, secondaryDateFormat)
-    }
-  }
 
   private def extractCellValue[T](column: Option[Int])(fromElement: Element => T)(tableRow: Element): Option[T] = {
     column
