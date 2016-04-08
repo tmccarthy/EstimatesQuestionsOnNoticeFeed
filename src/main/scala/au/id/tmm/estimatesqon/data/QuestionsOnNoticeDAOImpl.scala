@@ -126,27 +126,31 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     lookupRowFor(estimates).flatMap(estimatesRow => {
 
       if (estimatesRow.isEmpty) {
-        throw new UnregisteredEstimatesException(estimates)
+        Future{Set.empty}
+      } else {
+
+        val estimatesID = estimatesRow.get.estimatesID
+
+        // Query inspired by http://stackoverflow.com/a/28090544/1951001
+        val latestAnswersQuery = constructLatestAnswersQuery(estimatesID)
+
+        val matchingPdfBundlesQuery = latestAnswersQuery.flatMap(_.joinedPdfLinksBundle)
+
+        for {
+          answerRows <- database.run(latestAnswersQuery.result)
+          pdfBundleRows <- database.run(matchingPdfBundlesQuery.result)
+        } yield RowModelConversions.composeAnswersFrom(estimates, answerRows, pdfBundleRows)
       }
-
-      val estimatesID = estimatesRow.get.estimatesID
-
-      // Query inspired by http://stackoverflow.com/a/28090544/1951001
-      val latestAnswersQuery = TableQuery[AnswersTable].joinLeft(TableQuery[AnswersTable])
-        .on((anAnswer, allMoreRecentAnswers) => anAnswer.qonNumber === allMoreRecentAnswers.qonNumber && anAnswer.queryTimestamp < allMoreRecentAnswers.queryTimestamp)
-        .filter { case (anAnswer, allMoreRecentAnswers) => allMoreRecentAnswers.isEmpty }
-        .map { case (anAnswer, allMoreRecentAnswers) => anAnswer }
-        .filter(_.estimatesID === estimatesID)
-
-      val matchingPdfBundlesQuery = latestAnswersQuery.flatMap(_.joinedPdfLinksBundle)
-
-      for {
-        answerRows <- database.run(latestAnswersQuery.result)
-        pdfBundleRows <- database.run(matchingPdfBundlesQuery.result)
-      } yield RowModelConversions.composeAnswersFrom(estimates, answerRows, pdfBundleRows)
     })
   }
 
+  private def constructLatestAnswersQuery(estimatesID: Long): Query[AnswersTable, AnswerRow, Seq] = {
+    TableQuery[AnswersTable].joinLeft(TableQuery[AnswersTable])
+      .on((anAnswer, allMoreRecentAnswers) => anAnswer.qonNumber === allMoreRecentAnswers.qonNumber && anAnswer.queryTimestamp < allMoreRecentAnswers.queryTimestamp)
+      .filter { case (anAnswer, allMoreRecentAnswers) => allMoreRecentAnswers.isEmpty }
+      .map { case (anAnswer, allMoreRecentAnswers) => anAnswer }
+      .filter(_.estimatesID === estimatesID)
+  }
 }
 
 object QuestionsOnNoticeDAOImpl {

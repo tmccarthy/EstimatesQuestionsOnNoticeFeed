@@ -160,4 +160,19 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
 
     assert(interceptedException.estimates === estimates)
   }
+
+  it should "return an empty list if the most recent answers of an unregistered Estimates are requested" in {
+    Given("a freshly initialised database")
+    initialiseNewDb()
+
+    And("an unregistered Estimates")
+    val estimates = ExampleEstimates.COMMUNICATIONS_2015_BUDGET
+      .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
+
+    When("the most recent answers for that estimates are requested")
+    val answers = Await.result(dao.retrieveLatestAnswersFor(estimates), 30.seconds)
+
+    Then("an empty set is returned")
+    assert(answers.isEmpty)
+  }
 }
