@@ -20,7 +20,7 @@ object QuestionsOnNoticeUpdater {
     val combinedAnswers: Future[Set[AnswerUpdate]] = for {
       oldAnswers <- pastStoredAnswers
       newAnswers <- latestAnswers
-    } yield AnswerUpdate.fromListsOfOldAndNewAnswers(oldAnswers, newAnswers)
+    } yield AnswerUpdate.fromSetsOfOldAndNewAnswers(oldAnswers, newAnswers)
 
     val updateBundle = combinedAnswers.map(AnswerUpdateBundle.fromUpdates(_, estimates))
 

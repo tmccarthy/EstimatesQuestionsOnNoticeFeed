@@ -2,17 +2,40 @@ package au.id.tmm.estimatesqon.model
 
 import au.id.tmm.estimatesqon.model.AnswerUpdateType.AnswerUpdateType
 
-class AnswerUpdate protected (val oldAnswer: Option[Answer],
-                              val newAnswer: Option[Answer],
-                              val updateType: AnswerUpdateType) {
+case class AnswerUpdate (oldAnswer: Option[Answer],
+                         newAnswer: Option[Answer],
+                         updateType: AnswerUpdateType) {
 
   protected def this(oldAnswer: Option[Answer], newAnswer: Option[Answer]) =
     this(oldAnswer, newAnswer, AnswerUpdate.typeOfUpdate(oldAnswer, newAnswer))
 }
 
 object AnswerUpdate {
-  // TODO pair up the answers and create AnswerUpdates
-  def fromListsOfOldAndNewAnswers(oldAnswers: Set[Answer], newAnswers: Set[Answer]): Set[AnswerUpdate] = ???
+
+  def fromSetsOfOldAndNewAnswers(oldAnswers: Set[Answer], newAnswers: Set[Answer]): Set[AnswerUpdate] = {
+    val oldAnswersByIdentifier = oldAnswers.groupBy(_.qonIdentifier)
+    val newAnswersByIdentifier = newAnswers.groupBy(_.qonIdentifier)
+
+    ensureNoDuplicateQonIds(oldAnswersByIdentifier)
+    ensureNoDuplicateQonIds(newAnswersByIdentifier)
+
+    val allQonIds = oldAnswersByIdentifier.keySet ++ newAnswersByIdentifier.keySet
+
+    allQonIds.map(qonId => {
+      val oldAnswer = oldAnswersByIdentifier.get(qonId).flatMap(_.headOption)
+      val newAnswer = newAnswersByIdentifier.get(qonId).flatMap(_.headOption)
+
+      withOldAndNewAnswers(oldAnswer, newAnswer)
+    })
+  }
+
+  private def ensureNoDuplicateQonIds(answersByIdentifier: Map[String, Set[Answer]]) = {
+    val containsDuplicateQonIds = answersByIdentifier.values.exists(_.size > 1)
+
+    if (containsDuplicateQonIds) {
+      throw new IllegalArgumentException("Cannot determine updates if there are duplicate QON ids")
+    }
+  }
 
   def withOldAndNewAnswers(oldAnswer: Answer, newAnswer: Answer): AnswerUpdate =
     withOldAndNewAnswers(Some(oldAnswer), Some(newAnswer))
