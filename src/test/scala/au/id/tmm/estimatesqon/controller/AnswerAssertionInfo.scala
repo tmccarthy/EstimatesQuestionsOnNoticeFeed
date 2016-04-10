@@ -3,7 +3,6 @@ package au.id.tmm.estimatesqon.controller
 import java.time.LocalDate
 
 import au.id.tmm.estimatesqon.model.Answer
-import org.scalatest.FreeSpecLike
 
 private[controller] class AnswerAssertionInfo(val answerDescription: String,
                                               val findAnswerIn: List[Answer] => Option[Answer],
@@ -12,5 +11,5 @@ private[controller] class AnswerAssertionInfo(val answerDescription: String,
                                               val senator: String,
                                               val topic: String,
                                               val pdfURL: Option[String],
-                                              val dateReceived: Option[LocalDate]) extends FreeSpecLike {
+                                              val dateReceived: Option[LocalDate]) {
 }

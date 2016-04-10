@@ -20,6 +20,8 @@ case class Estimates protected (portfolio: Portfolio,
   lazy val firstDayOldDateType: Date = firstDay.toOldDateAtZone(Estimates.estimatesTimeZone)
 
   lazy val lastDayOldDateType: Date = lastDay.toOldDateAtZone(Estimates.estimatesTimeZone)
+
+  lazy val printableString: String = s"${firstDay.getYear} ${portfolio.name} $description"
 }
 
 object Estimates {

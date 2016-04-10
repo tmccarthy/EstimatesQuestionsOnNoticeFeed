@@ -8,6 +8,13 @@ case class AnswerUpdate (oldAnswer: Option[Answer],
 
   protected def this(oldAnswer: Option[Answer], newAnswer: Option[Answer]) =
     this(oldAnswer, newAnswer, AnswerUpdate.typeOfUpdate(oldAnswer, newAnswer))
+
+  AnswerUpdate.throwIfDifferentEstimates(oldAnswer, newAnswer)
+  AnswerUpdate.throwIfDifferentQuestion(oldAnswer, newAnswer)
+
+  val estimates: Estimates = oldAnswer.getOrElse(newAnswer.get).estimates
+
+  val qonId: String = oldAnswer.getOrElse(newAnswer.get).qonIdentifier
 }
 
 object AnswerUpdate {
@@ -51,8 +58,6 @@ object AnswerUpdate {
     new AnswerUpdate(None, Some(existingAnswer), AnswerUpdateType.EXISTING)
 
   private def typeOfUpdate(oldAnswer: Option[Answer], newAnswer: Option[Answer]): AnswerUpdateType = {
-    throwIfDifferentQuestion(oldAnswer, newAnswer)
-
     if (oldAnswer.isDefined && newAnswer.isEmpty) {
       AnswerUpdateType.REMOVED
 
@@ -77,6 +82,12 @@ object AnswerUpdate {
   private def throwIfDifferentQuestion(oldAnswer: Option[Answer], newAnswer: Option[Answer]) = {
     if (oldAnswer.isDefined && newAnswer.isDefined && oldAnswer.get.hasDifferentQONIdentifierTo(newAnswer.get)) {
       throw new IllegalArgumentException("The answers are to two different questions")
+    }
+  }
+
+  private def throwIfDifferentEstimates(oldAnswer: Option[Answer], newAnswer: Option[Answer]) = {
+    if (oldAnswer.isDefined && newAnswer.isDefined && oldAnswer.get.hasDifferentEstimatesTo(newAnswer.get)) {
+      throw new IllegalArgumentException("The answers are for two different estimates")
     }
   }
 }

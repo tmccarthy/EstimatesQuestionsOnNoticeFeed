@@ -18,17 +18,16 @@ case class Answer protected (estimates: Estimates,
                              latestDateReceived: Option[LocalDate]
                             ) {
 
-  def hasDifferentQONIdentifierTo(that: Answer): Boolean = {
-    qonIdentifier != that.qonIdentifier
-  }
+  def hasDifferentEstimatesTo(that: Answer): Boolean = estimates != that.estimates
 
-  def hasDifferentAnswerDetailsTo(that: Answer): Boolean = {
+  def hasDifferentQONIdentifierTo(that: Answer): Boolean = qonIdentifier != that.qonIdentifier
+
+  def hasDifferentAnswerDetailsTo(that: Answer): Boolean =
     divisionOrAgency != that.divisionOrAgency ||
       senator != that.senator ||
       topic != that.topic ||
       pdfURLs != that.pdfURLs ||
       latestDateReceived != that.latestDateReceived
-  }
 
   val latestDateReceivedOldDateType: Option[Date] = latestDateReceived
     .map(_.toOldDateAtZone(Estimates.estimatesTimeZone))

@@ -50,6 +50,14 @@ class EstimatesSpec extends StandardProjectSpec {
     assert(expectedLastDayOldFormat === estimatesUnderTest.lastDayOldDateType)
   }
 
+  it should "have a printable representation" in {
+    val actualString = estimatesUnderTest.printableString
+
+    val expectedString = "2015 Communications Budget Estimates"
+
+    assert(expectedString === actualString)
+  }
+
   "An estimates" can "be constructed using dates in the old type" in {
     val firstDayOldType: Date = new Date(1432648800000l)
     val lastDayOldType: Date = new Date(1432735200000l)

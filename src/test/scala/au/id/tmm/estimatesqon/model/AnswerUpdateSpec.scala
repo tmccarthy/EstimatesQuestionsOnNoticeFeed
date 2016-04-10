@@ -4,42 +4,13 @@ import java.net.URL
 import java.time._
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
-import au.id.tmm.estimatesqon.controller.TestResources
 
 class AnswerUpdateSpec extends StandardProjectSpec {
-
-  private val SPECIAL_MOMENT: ZonedDateTime = ZonedDateTime.of(
-    LocalDateTime.of(2003, Month.JANUARY, 3, 5, 0),
-    ZoneId.of("Australia/Sydney"))
-
-  private val portfolio = Portfolio.withName("Communications")
-  private val estimates = ExampleEstimates
-    .COMMUNICATIONS_2015_BUDGET
-    .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
-
-  def defaultAnswer(estimates: Estimates = estimates,
-                    qonNumber: String = "1",
-                    divisionOrAgency: Option[String] = Some("All"),
-                    senator: Option[String] = Some("Carr"),
-                    topic: Option[String] = Some("General"),
-                    pdfURLs: Seq[URL] = Seq.empty,
-                    scrapedTimestamp: Instant = SPECIAL_MOMENT.toInstant,
-                    datesReceived: Set[LocalDate] = Set.empty): Answer = {
-
-    Answer.create(estimates,
-      qonNumber,
-      divisionOrAgency = divisionOrAgency,
-      senator = senator,
-      topic = topic,
-      pdfURLs = pdfURLs,
-      scrapedTimestamp = scrapedTimestamp,
-      datesReceived = datesReceived)
-  }
 
   behaviour of "an update including data for an existing Answer"
 
   {
-    lazy val existingAnswer = defaultAnswer()
+    lazy val existingAnswer = AnswerUpdatesForTesting.defaultAnswer()
     lazy val answerUpdate = AnswerUpdate.forExistingAnswer(existingAnswer)
 
     it should "have an empty value for the old answer" in {
@@ -53,13 +24,32 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     it should s"have an Answer Update type of ${AnswerUpdateType.EXISTING}" in {
       assert(answerUpdate.updateType === AnswerUpdateType.EXISTING)
     }
+
+    it should "have the estimates of the existing answer" in {
+      assert(answerUpdate.estimates === existingAnswer.estimates)
+    }
+
+    it should "have the qonIdentifier of the existing answer" in {
+      assert(answerUpdate.qonId === existingAnswer.qonIdentifier)
+    }
+  }
+
+  behaviour of "an update for answers to questions with the same ID for different estimates"
+
+  it should "throw an IllegalArgumentException when constructed" in {
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(estimates = ExampleEstimates.COMMUNICATIONS_2015_BUDGET)
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(estimates = ExampleEstimates.TREASURY_2015_BUDGET)
+
+    intercept[IllegalArgumentException] {
+      AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
+    }
   }
 
   behaviour of "an update for answers to different questions"
 
   it should "throw an IllegalArgumentException when constructed" in {
-    val oldAnswer = defaultAnswer(qonNumber = "1")
-    val newAnswer = defaultAnswer(qonNumber = "2")
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(qonNumber = "1")
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(qonNumber = "2")
 
     intercept[IllegalArgumentException] {
       AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
@@ -69,28 +59,60 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   behaviour of "an update from an empty answer to an answer"
 
   it should s"have an update type of ${AnswerUpdateType.NEW}" in {
-    val newAnswer = defaultAnswer()
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer()
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(None, Some(newAnswer))
 
     assert(answerUpdate.updateType === AnswerUpdateType.NEW)
   }
 
+  it should "have the estimates of the new Answer" in {
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer()
+
+    val answerUpdate = AnswerUpdate.withOldAndNewAnswers(None, Some(newAnswer))
+
+    assert(answerUpdate.estimates === newAnswer.estimates)
+  }
+
+  it should "have the qonID of the new Answer" in {
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer()
+
+    val answerUpdate = AnswerUpdate.withOldAndNewAnswers(None, Some(newAnswer))
+
+    assert(answerUpdate.qonId === newAnswer.qonIdentifier)
+  }
+
   behaviour of "an update from an answer to an empty answer"
 
   it should s"have an update type of ${AnswerUpdateType.REMOVED}" in {
-    val oldAnswer = defaultAnswer()
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer()
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(Some(oldAnswer), None)
 
     assert(answerUpdate.updateType === AnswerUpdateType.REMOVED)
   }
 
+  it should "have the estimates of the old Answer" in {
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer()
+
+    val answerUpdate = AnswerUpdate.withOldAndNewAnswers(Some(oldAnswer), None)
+
+    assert(answerUpdate.estimates === oldAnswer.estimates)
+  }
+
+  it should "have the qonID of the old Answer" in {
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer()
+
+    val answerUpdate = AnswerUpdate.withOldAndNewAnswers(Some(oldAnswer), None)
+
+    assert(answerUpdate.qonId === oldAnswer.qonIdentifier)
+  }
+
   behaviour of "an update between two identical answers"
 
   it should s"have an update type of ${AnswerUpdateType.NO_CHANGE}" in {
-    val oldAnswer = defaultAnswer()
-    val newAnswer = defaultAnswer()
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer()
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer()
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 
@@ -100,8 +122,8 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   behaviour of "an update from an answer without a pdf link to an answer with a pdf link"
 
   it should s"have an update type of ${AnswerUpdateType.ANSWERED}" in {
-    val oldAnswer = defaultAnswer(pdfURLs = Seq.empty)
-    val newAnswer = defaultAnswer(pdfURLs = Seq(new URL("http://example.com/link.pdf")))
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq.empty)
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq(new URL("http://example.com/link.pdf")))
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 
@@ -112,8 +134,8 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     "answered value but no pdf link"
 
   it should s"have an update type of ${AnswerUpdateType.MARKED_AS_ANSWERED}" in {
-    val oldAnswer = defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set.empty)
-    val newAnswer = defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set(LocalDate.of(2015, Month.AUGUST, 23)))
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set.empty)
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set(LocalDate.of(2015, Month.AUGUST, 23)))
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 
@@ -123,8 +145,8 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   behaviour of "an update from an unanswered answer to another unanswered answer with other details changed"
 
   it should s"have an answer type of ${AnswerUpdateType.DETAILS_ALTERED}" in {
-    val oldAnswer = defaultAnswer(senator = Some("Carr"))
-    val newAnswer = defaultAnswer(senator = Some("Arbib"))
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(senator = Some("Carr"))
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(senator = Some("Arbib"))
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 
@@ -134,11 +156,11 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   behaviour of "computation of AnswerUpdates from answer lists"
 
   it should "correctly compute the answer updates" in {
-    val oldAnswer1 = defaultAnswer()
-    val oldAnswer2 = defaultAnswer(qonNumber = "2")
+    val oldAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
+    val oldAnswer2 = AnswerUpdatesForTesting.defaultAnswer(qonNumber = "2")
     val oldAnswers = Set(oldAnswer1, oldAnswer2)
 
-    val newAnswer1 = defaultAnswer(pdfURLs = Seq(new URL("https://example.com")), datesReceived = Set(LocalDate.of(2016, Month.APRIL, 9)))
+    val newAnswer1 = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq(new URL("https://example.com")), datesReceived = Set(LocalDate.of(2016, Month.APRIL, 9)))
     val newAnswers = Set(newAnswer1)
 
     val actualUpdates = AnswerUpdate.fromSetsOfOldAndNewAnswers(oldAnswers, newAnswers)
@@ -150,11 +172,11 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   }
 
   it should "fail if there are any duplicate QON numbers in the old answers" in {
-    val oldAnswer1 = defaultAnswer()
-    val oldAnswer2 = defaultAnswer(senator = Some("Dasha"))
+    val oldAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
+    val oldAnswer2 = AnswerUpdatesForTesting.defaultAnswer(senator = Some("Dasha"))
     val oldAnswers = Set(oldAnswer1, oldAnswer2)
 
-    val newAnswer1 = defaultAnswer()
+    val newAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
     val newAnswers = Set(newAnswer1)
 
     intercept[IllegalArgumentException] {
@@ -163,11 +185,11 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   }
 
   it should "fail if there are any duplicate QON numbers in the new answers" in {
-    val oldAnswer1 = defaultAnswer()
+    val oldAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
     val oldAnswers = Set(oldAnswer1)
 
-    val newAnswer1 = defaultAnswer()
-    val newAnswer2 = defaultAnswer(senator = Some("Dasha"))
+    val newAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
+    val newAnswer2 = AnswerUpdatesForTesting.defaultAnswer(senator = Some("Dasha"))
     val newAnswers = Set(newAnswer1, newAnswer2)
 
     intercept[IllegalArgumentException] {
