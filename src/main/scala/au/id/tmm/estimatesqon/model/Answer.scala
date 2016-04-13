@@ -7,8 +7,7 @@ import java.util.Date
 import au.id.tmm.estimatesqon.utils.DateUtils.ImprovedLocalDate
 import au.id.tmm.estimatesqon.utils.LocalDateOrdering
 
-case class Answer protected (estimates: Estimates,
-                             qonIdentifier: String,
+case class Answer protected (question: Question,
                              scrapedTimestamp: Instant,
 
                              divisionOrAgency: Option[String],
@@ -17,11 +16,6 @@ case class Answer protected (estimates: Estimates,
                              pdfURLs: List[URL],
                              latestDateReceived: Option[LocalDate]
                             ) {
-
-  def hasDifferentEstimatesTo(that: Answer): Boolean = estimates != that.estimates
-
-  def hasDifferentQONIdentifierTo(that: Answer): Boolean = qonIdentifier != that.qonIdentifier
-
   def hasDifferentAnswerDetailsTo(that: Answer): Boolean =
     divisionOrAgency != that.divisionOrAgency ||
       senator != that.senator ||
@@ -42,8 +36,7 @@ object Answer {
              topic: Option[String],
              pdfURLs: List[URL],
              datesReceived: Set[LocalDate]): Answer = {
-    new Answer(estimates,
-      qonNumber,
+    Answer(Question(estimates, qonNumber),
       scrapedTimestamp,
       divisionOrAgency,
       senator,
@@ -60,8 +53,7 @@ object Answer {
              topic: Option[String],
              pdfURLs: List[URL],
              latestDateReceived: Option[LocalDate]): Answer = {
-    new Answer(estimates,
-      qonNumber,
+    Answer(Question(estimates, qonNumber),
       scrapedTimestamp,
       divisionOrAgency,
       senator,

@@ -38,7 +38,7 @@ object RowModelConversions {
       estimatesID        = estimatesID,
       queryTimestamp     = answerDetailsToWrite.scrapedTimestamp.toEpochMilli,
       updateType         = answerUpdate.updateType.toString,
-      qonNumber          = answerDetailsToWrite.qonIdentifier,
+      qonNumber          = answerDetailsToWrite.question.qonId,
       division           = answerDetailsToWrite.divisionOrAgency,
       senator            = answerDetailsToWrite.senator,
       topic              = answerDetailsToWrite.topic,

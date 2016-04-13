@@ -9,38 +9,37 @@ case class AnswerUpdate (oldAnswer: Option[Answer],
   protected def this(oldAnswer: Option[Answer], newAnswer: Option[Answer]) =
     this(oldAnswer, newAnswer, AnswerUpdate.typeOfUpdate(oldAnswer, newAnswer))
 
-  AnswerUpdate.throwIfDifferentEstimates(oldAnswer, newAnswer)
   AnswerUpdate.throwIfDifferentQuestion(oldAnswer, newAnswer)
 
-  val estimates: Estimates = oldAnswer.getOrElse(newAnswer.get).estimates
+  val estimates: Estimates = oldAnswer.getOrElse(newAnswer.get).question.estimates
 
-  val qonId: String = oldAnswer.getOrElse(newAnswer.get).qonIdentifier
+  val qonId: String = oldAnswer.getOrElse(newAnswer.get).question.qonId
 }
 
 object AnswerUpdate {
 
   def fromSetsOfOldAndNewAnswers(oldAnswers: Set[Answer], newAnswers: Set[Answer]): Set[AnswerUpdate] = {
-    val oldAnswersByIdentifier = oldAnswers.groupBy(_.qonIdentifier)
-    val newAnswersByIdentifier = newAnswers.groupBy(_.qonIdentifier)
+    val oldAnswersByQuestion = oldAnswers.groupBy(_.question)
+    val newAnswersByQuestion = newAnswers.groupBy(_.question)
 
-    ensureNoDuplicateQonIds(oldAnswersByIdentifier)
-    ensureNoDuplicateQonIds(newAnswersByIdentifier)
+    ensureNoDuplicateQuestions(oldAnswersByQuestion)
+    ensureNoDuplicateQuestions(newAnswersByQuestion)
 
-    val allQonIds = oldAnswersByIdentifier.keySet ++ newAnswersByIdentifier.keySet
+    val allQonIds = oldAnswersByQuestion.keySet ++ newAnswersByQuestion.keySet
 
     allQonIds.map(qonId => {
-      val oldAnswer = oldAnswersByIdentifier.get(qonId).flatMap(_.headOption)
-      val newAnswer = newAnswersByIdentifier.get(qonId).flatMap(_.headOption)
+      val oldAnswer = oldAnswersByQuestion.get(qonId).flatMap(_.headOption)
+      val newAnswer = newAnswersByQuestion.get(qonId).flatMap(_.headOption)
 
       withOldAndNewAnswers(oldAnswer, newAnswer)
     })
   }
 
-  private def ensureNoDuplicateQonIds(answersByIdentifier: Map[String, Set[Answer]]) = {
-    val containsDuplicateQonIds = answersByIdentifier.values.exists(_.size > 1)
+  private def ensureNoDuplicateQuestions(answersByQuestions: Map[Question, Set[Answer]]) = {
+    val containsDuplicateQuestions = answersByQuestions.values.exists(_.size > 1)
 
-    if (containsDuplicateQonIds) {
-      throw new IllegalArgumentException("Cannot determine updates if there are duplicate QON ids")
+    if (containsDuplicateQuestions) {
+      throw new IllegalArgumentException("Cannot determine updates if there are duplicate questions")
     }
   }
 
@@ -79,17 +78,11 @@ object AnswerUpdate {
     }
   }
 
-  // TODO this should be checking on the estimates as well
   private def throwIfDifferentQuestion(oldAnswer: Option[Answer], newAnswer: Option[Answer]) = {
-    if (oldAnswer.isDefined && newAnswer.isDefined && oldAnswer.get.hasDifferentQONIdentifierTo(newAnswer.get)) {
+    if (oldAnswer.isDefined &&
+      newAnswer.isDefined &&
+      oldAnswer.get.question != newAnswer.get.question) {
       throw new IllegalArgumentException("The answers are to two different questions")
-    }
-  }
-
-  // TODO this should be checking on the estimates as well
-  private def throwIfDifferentEstimates(oldAnswer: Option[Answer], newAnswer: Option[Answer]) = {
-    if (oldAnswer.isDefined && newAnswer.isDefined && oldAnswer.get.hasDifferentEstimatesTo(newAnswer.get)) {
-      throw new IllegalArgumentException("The answers are for two different estimates")
     }
   }
 }

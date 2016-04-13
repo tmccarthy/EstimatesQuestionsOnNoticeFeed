@@ -26,11 +26,11 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     }
 
     it should "have the estimates of the existing answer" in {
-      assert(answerUpdate.estimates === existingAnswer.estimates)
+      assert(answerUpdate.estimates === existingAnswer.question.estimates)
     }
 
     it should "have the qonIdentifier of the existing answer" in {
-      assert(answerUpdate.qonId === existingAnswer.qonIdentifier)
+      assert(answerUpdate.qonId === existingAnswer.question.qonId)
     }
   }
 
@@ -71,7 +71,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(None, Some(newAnswer))
 
-    assert(answerUpdate.estimates === newAnswer.estimates)
+    assert(answerUpdate.estimates === newAnswer.question.estimates)
   }
 
   it should "have the qonID of the new Answer" in {
@@ -79,7 +79,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(None, Some(newAnswer))
 
-    assert(answerUpdate.qonId === newAnswer.qonIdentifier)
+    assert(answerUpdate.qonId === newAnswer.question.qonId)
   }
 
   behaviour of "an update from an answer to an empty answer"
@@ -97,7 +97,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(Some(oldAnswer), None)
 
-    assert(answerUpdate.estimates === oldAnswer.estimates)
+    assert(answerUpdate.estimates === oldAnswer.question.estimates)
   }
 
   it should "have the qonID of the old Answer" in {
@@ -105,7 +105,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(Some(oldAnswer), None)
 
-    assert(answerUpdate.qonId === oldAnswer.qonIdentifier)
+    assert(answerUpdate.qonId === oldAnswer.question.qonId)
   }
 
   behaviour of "an update between two identical answers"
@@ -171,7 +171,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     )
   }
 
-  it should "fail if there are any duplicate QON numbers in the old answers" in {
+  it should "fail if there are any duplicate questions in the old answers" in {
     val oldAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
     val oldAnswer2 = AnswerUpdatesForTesting.defaultAnswer(senator = Some("Dasha"))
     val oldAnswers = Set(oldAnswer1, oldAnswer2)
@@ -184,7 +184,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     }
   }
 
-  it should "fail if there are any duplicate QON numbers in the new answers" in {
+  it should "fail if there are any duplicate questions in the new answers" in {
     val oldAnswer1 = AnswerUpdatesForTesting.defaultAnswer()
     val oldAnswers = Set(oldAnswer1)
 

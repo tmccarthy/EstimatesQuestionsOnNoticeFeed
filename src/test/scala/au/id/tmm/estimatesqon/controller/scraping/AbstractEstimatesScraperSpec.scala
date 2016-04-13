@@ -33,7 +33,7 @@ private[scraping] abstract class AbstractEstimatesScraperSpec protected (val est
     }
 
     it should s"have ${answerAssertionInfo.qonNumber} as the qon number" in {
-      assert(answer.get.qonIdentifier === answerAssertionInfo.qonNumber)
+      assert(answer.get.question.qonId === answerAssertionInfo.qonNumber)
     }
 
     it should s"have ${answerAssertionInfo.divisionOrAgency} as the division" in {
