@@ -14,7 +14,7 @@ object AnswerUpdatesForTesting {
   private val defaultDivision = Some("All")
   private val defaultSenator = Some("Dastyari")
   private val defaultTopic = Some("General")
-  private val defaultPdfUrls = Seq(new URL("http://example.com/one.pdf"), new URL("http://example.com/two.pdf"))
+  private val defaultPdfUrls = List(new URL("http://example.com/one.pdf"), new URL("http://example.com/two.pdf"))
   private val defaultScrapedTimestamp = SPECIAL_MOMENT.toInstant
   private val defaultDatesReceived = Set(LocalDate.of(2016, Month.JANUARY, 13), LocalDate.of(2015, Month.AUGUST, 18))
 
@@ -23,7 +23,7 @@ object AnswerUpdatesForTesting {
                     divisionOrAgency: Option[String] = defaultDivision,
                     senator: Option[String]          = defaultSenator,
                     topic: Option[String]            = defaultTopic,
-                    pdfURLs: Seq[URL]                = defaultPdfUrls,
+                    pdfURLs: List[URL]               = defaultPdfUrls,
                     scrapedTimestamp: Instant        = defaultScrapedTimestamp,
                     datesReceived: Set[LocalDate]    = defaultDatesReceived): Answer = {
 
@@ -38,8 +38,8 @@ object AnswerUpdatesForTesting {
   }
 
   val answeredAnswer = defaultAnswer()
-  val unansweredAnswer = defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set.empty)
-  val markedAnsweredAnswer = defaultAnswer(pdfURLs = Seq.empty)
+  val unansweredAnswer = defaultAnswer(pdfURLs = List.empty, datesReceived = Set.empty)
+  val markedAnsweredAnswer = defaultAnswer(pdfURLs = List.empty)
 
   val forExistingAnsweredAnswer = AnswerUpdate.forExistingAnswer(answeredAnswer)
 

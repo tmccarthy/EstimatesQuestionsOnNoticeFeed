@@ -125,7 +125,7 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     Await.result(dao.registerEstimates(estimates), 30.seconds)
 
     When("an answer update bundle is written")
-    val answers = EstimatesScraper.forEstimates(estimates).extractAnswers.toSet
+    val answers = EstimatesScraper.scrapeFrom(estimates).toSet
     val updates = answers.map(AnswerUpdate.forExistingAnswer)
     val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
     Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
@@ -149,7 +149,7 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
       .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
 
     When("an answer update bundle is written")
-    val answers = EstimatesScraper.forEstimates(estimates).extractAnswers.toSet
+    val answers = EstimatesScraper.scrapeFrom(estimates).toSet
     val updates = answers.map(AnswerUpdate.forExistingAnswer)
     val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
 

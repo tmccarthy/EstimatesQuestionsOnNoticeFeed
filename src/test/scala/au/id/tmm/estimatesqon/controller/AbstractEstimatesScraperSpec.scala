@@ -19,8 +19,7 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
 
   val expectedTimestamp = Instant.now()
 
-  val scraper: EstimatesScraper = EstimatesScraper.forEstimates(estimates)
-  val scrapedAnswers: List[Answer] = scraper.extractAnswers.toList
+  val scrapedAnswers: List[Answer] = EstimatesScraper.scrapeFrom(estimates)
 
   s"The set of answers extracted from the $estimatesTestDescription" should s"have $expectedNumAnswers answers" in {
     assert(scrapedAnswers.size === expectedNumAnswers)

@@ -14,7 +14,7 @@ case class Answer protected (estimates: Estimates,
                              divisionOrAgency: Option[String],
                              senator: Option[String],
                              topic: Option[String],
-                             pdfURLs: Seq[URL],
+                             pdfURLs: List[URL],
                              latestDateReceived: Option[LocalDate]
                             ) {
 
@@ -40,7 +40,7 @@ object Answer {
              divisionOrAgency: Option[String],
              senator: Option[String],
              topic: Option[String],
-             pdfURLs: Seq[URL],
+             pdfURLs: List[URL],
              datesReceived: Set[LocalDate]): Answer = {
     new Answer(estimates,
       qonNumber,
@@ -58,7 +58,7 @@ object Answer {
              divisionOrAgency: Option[String],
              senator: Option[String],
              topic: Option[String],
-             pdfURLs: Seq[URL],
+             pdfURLs: List[URL],
              latestDateReceived: Option[LocalDate]): Answer = {
     new Answer(estimates,
       qonNumber,

@@ -122,8 +122,8 @@ class AnswerUpdateSpec extends StandardProjectSpec {
   behaviour of "an update from an answer without a pdf link to an answer with a pdf link"
 
   it should s"have an update type of ${AnswerUpdateType.ANSWERED}" in {
-    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq.empty)
-    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq(new URL("http://example.com/link.pdf")))
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = List.empty)
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = List(new URL("http://example.com/link.pdf")))
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 
@@ -134,8 +134,8 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     "answered value but no pdf link"
 
   it should s"have an update type of ${AnswerUpdateType.MARKED_AS_ANSWERED}" in {
-    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set.empty)
-    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq.empty, datesReceived = Set(LocalDate.of(2015, Month.AUGUST, 23)))
+    val oldAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = List.empty, datesReceived = Set.empty)
+    val newAnswer = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = List.empty, datesReceived = Set(LocalDate.of(2015, Month.AUGUST, 23)))
 
     val answerUpdate = AnswerUpdate.withOldAndNewAnswers(oldAnswer, newAnswer)
 
@@ -160,7 +160,7 @@ class AnswerUpdateSpec extends StandardProjectSpec {
     val oldAnswer2 = AnswerUpdatesForTesting.defaultAnswer(qonNumber = "2")
     val oldAnswers = Set(oldAnswer1, oldAnswer2)
 
-    val newAnswer1 = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = Seq(new URL("https://example.com")), datesReceived = Set(LocalDate.of(2016, Month.APRIL, 9)))
+    val newAnswer1 = AnswerUpdatesForTesting.defaultAnswer(pdfURLs = List(new URL("https://example.com")), datesReceived = Set(LocalDate.of(2016, Month.APRIL, 9)))
     val newAnswers = Set(newAnswer1)
 
     val actualUpdates = AnswerUpdate.fromSetsOfOldAndNewAnswers(oldAnswers, newAnswers)

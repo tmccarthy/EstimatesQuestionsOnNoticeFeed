@@ -71,7 +71,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
 
   private def constructRowsToInsertFor(updateBundle: AnswerUpdateBundle,
                                        estimatesID: Long): (Set[AnswerRow], Set[PDFLinkBundleRow]) = {
-    val rowsToInsert: Set[(AnswerRow, Seq[PDFLinkBundleRow])] = updateBundle
+    val rowsToInsert: Set[(AnswerRow, List[PDFLinkBundleRow])] = updateBundle
       .updates
       .zipWithIndex
       .map{
@@ -84,18 +84,18 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     (answerRows, pdfLinkRows)
   }
 
-  private def constructRowsFor(answerUpdate: AnswerUpdate, estimatesID: Long, answerID: Long): (AnswerRow, Seq[PDFLinkBundleRow]) = {
+  private def constructRowsFor(answerUpdate: AnswerUpdate, estimatesID: Long, answerID: Long): (AnswerRow, List[PDFLinkBundleRow]) = {
     // TODO better way to get bundle id
 
     val linkBundleID = Random.nextLong()
 
-    val pdfs: Option[Seq[PDFLinkBundleRow]] = answerUpdate.newAnswer
+    val pdfs: Option[List[PDFLinkBundleRow]] = answerUpdate.newAnswer
       .map(RowModelConversions.pdfLinkBundleRowsFrom(_, linkBundleID))
       .filter(_.nonEmpty)
 
     val answerRow: AnswerRow = RowModelConversions.answerUpdateToDbRow(answerUpdate, estimatesID, Some(linkBundleID).filter(_ => pdfs.isDefined), answerID)
 
-    (answerRow, pdfs.getOrElse(Seq.empty))
+    (answerRow, pdfs.getOrElse(List.empty))
   }
 
   override def registerEstimates(estimates: Estimates): Future[Unit] = {
@@ -131,19 +131,19 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
 
         val estimatesID = estimatesRow.get.estimatesID
 
-        // Query inspired by http://stackoverflow.com/a/28090544/1951001
         val latestAnswersQuery = constructLatestAnswersQuery(estimatesID)
 
         val matchingPdfBundlesQuery = latestAnswersQuery.flatMap(_.joinedPdfLinksBundle)
 
         for {
-          answerRows <- database.run(latestAnswersQuery.result)
-          pdfBundleRows <- database.run(matchingPdfBundlesQuery.result)
+          answerRows <- database.run(latestAnswersQuery.result).map(_.toList)
+          pdfBundleRows <- database.run(matchingPdfBundlesQuery.result).map(_.toList)
         } yield RowModelConversions.composeAnswersFrom(estimates, answerRows, pdfBundleRows)
       }
     })
   }
 
+  // Query inspired by http://stackoverflow.com/a/28090544/1951001
   private def constructLatestAnswersQuery(estimatesID: Long): Query[AnswersTable, AnswerRow, Seq] = {
     TableQuery[AnswersTable].joinLeft(TableQuery[AnswersTable])
       .on((anAnswer, allMoreRecentAnswers) => anAnswer.qonNumber === allMoreRecentAnswers.qonNumber && anAnswer.queryTimestamp < allMoreRecentAnswers.queryTimestamp)

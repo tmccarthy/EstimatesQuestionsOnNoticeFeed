@@ -46,21 +46,21 @@ object RowModelConversions {
       pdfLinksBundleID   = pdfLinkBundleId)
   }
 
-  def pdfLinkBundleRowsFrom(answer: Answer, bundleId: Long): Seq[PDFLinkBundleRow] =
+  def pdfLinkBundleRowsFrom(answer: Answer, bundleId: Long): List[PDFLinkBundleRow] =
     answer.pdfURLs.zipWithIndex
-      .map{case (link, index) => PDFLinkBundleRow(bundleId, index, link.toString)}
+      .map { case (link, index) => PDFLinkBundleRow(bundleId, index, link.toString) }
 
   def composeAnswersFrom(estimates: Estimates,
-                                 answerRows: Seq[AnswerRow],
-                                 pdfBundleRows: Seq[PDFLinkBundleRow]): Set[Answer] = {
-    val pdfsMap: Map[Long, Seq[URL]] = readIntoMap(pdfBundleRows)
+                         answerRows: List[AnswerRow],
+                         pdfBundleRows: List[PDFLinkBundleRow]): Set[Answer] = {
+    val pdfsMap: Map[Long, List[URL]] = readIntoMap(pdfBundleRows)
 
     answerRows
       .map(row => constructAnswerFrom(estimates, row, pdfsMap))
       .toSet
   }
 
-  private def readIntoMap(pdfBundleRows: Seq[PDFLinkBundleRow]): Map[Long, Seq[URL]] = {
+  private def readIntoMap(pdfBundleRows: List[PDFLinkBundleRow]): Map[Long, List[URL]] = {
     pdfBundleRows.groupBy(_.pdfBundleID)
       .map{
         case (bundleID, bundleRows) => {
@@ -75,7 +75,7 @@ object RowModelConversions {
 
   private def constructAnswerFrom(estimates: Estimates,
                                   row: AnswerRow,
-                                  pdfBundleLookup: Map[Long, Seq[URL]]): Answer = {
+                                  pdfBundleLookup: Map[Long, List[URL]]): Answer = {
     Answer.create(
       estimates          = estimates,
       qonNumber          = row.qonNumber,
@@ -83,7 +83,7 @@ object RowModelConversions {
       divisionOrAgency   = row.division,
       senator            = row.senator,
       topic              = row.topic,
-      pdfURLs            = row.pdfLinksBundleID.map(pdfBundleLookup(_)).getOrElse(Seq.empty),
+      pdfURLs            = row.pdfLinksBundleID.map(pdfBundleLookup(_)).getOrElse(List.empty),
       latestDateReceived = row.latestDateReceived.map(_.toLocalDateAtZone(Estimates.estimatesTimeZone)))
   }
 }

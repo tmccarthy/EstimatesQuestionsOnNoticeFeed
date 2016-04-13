@@ -11,12 +11,12 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.Element
 
 private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
-                                  val divisionOrAgencyCol: Option[Int],
-                                  val senatorCol: Option[Int],
-                                  val topicCol: Option[Int],
-                                  val pdfsCol: Option[Int],
-                                  val dateCol: Option[Int]
-                                   ) {
+                                                       val divisionOrAgencyCol: Option[Int],
+                                                       val senatorCol: Option[Int],
+                                                       val topicCol: Option[Int],
+                                                       val pdfsCol: Option[Int],
+                                                       val dateCol: Option[Int]
+                                                      ) {
 
   private val primaryDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
   private val secondaryDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -30,10 +30,10 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
 
   def extractTopic: Element => Option[String] = extractCellValueFromText(topicCol)(string => string.trim.replaceAll("\u00a0", ""))
 
-  def extractPDFs: Element => Option[Seq[URL]] = extractCellValue(pdfsCol)(cell => {
+  def extractPDFs: Element => Option[List[URL]] = extractCellValue(pdfsCol)(cell => {
     val linkElements: List[Element] = cell.descendents.filter(_.tagName == "a").toList
 
-    val pdfs: Seq[URL] = linkElements.flatMap(pdfLinkFromLinkElement)
+    val pdfs: List[URL] = linkElements.flatMap(pdfLinkFromLinkElement)
 
     pdfs
   })
@@ -55,7 +55,7 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
 
       val dates: Stream[LocalDate] = dateStrings
         .flatMap(dateString => DateUtils.parseDate(dateString,
-        primaryDateFormat, secondaryDateFormat, tertiaryDateFormat))
+          primaryDateFormat, secondaryDateFormat, tertiaryDateFormat))
 
       Set(dates: _*)
     }
