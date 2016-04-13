@@ -12,9 +12,9 @@ import org.jsoup.select.Elements
 
 import scala.io.Source
 
-object EstimatesScraperImpl {
+private [scraping] object EstimatesScraperImpl extends EstimatesScraper {
 
-  def scrapeFrom(estimates: Estimates): List[Answer] = {
+  override def scrapeFrom(estimates: Estimates): List[Answer] = {
     val timestamp = Instant.now()
 
     val document: Document = retrieveEstimatesPage(estimates)

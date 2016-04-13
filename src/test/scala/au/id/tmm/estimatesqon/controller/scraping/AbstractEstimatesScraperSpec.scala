@@ -1,17 +1,16 @@
-package au.id.tmm.estimatesqon.controller
+package au.id.tmm.estimatesqon.controller.scraping
 
 import java.net.URL
 import java.time.{Duration, Instant}
 
-import au.id.tmm.estimatesqon.controller.scraping.EstimatesScraperImpl
 import au.id.tmm.estimatesqon.model.{Answer, Estimates}
 import org.scalatest.{FlatSpec, GivenWhenThen}
 
-private[controller] abstract class AbstractEstimatesScraperSpec protected (val estimatesToTest: Estimates,
-                                                                           val resourceURL: URL,
-                                                                           val expectedNumAnswers: Int,
-                                                                           val answerAssertions: Iterable[AnswerAssertionInfo]
-                                                                          ) extends FlatSpec with GivenWhenThen {
+private[scraping] abstract class AbstractEstimatesScraperSpec protected (val estimatesToTest: Estimates,
+                                                                         val resourceURL: URL,
+                                                                         val expectedNumAnswers: Int,
+                                                                         val answerAssertions: Iterable[AnswerAssertionInfo]
+                                                                        ) extends FlatSpec with GivenWhenThen {
 
   val estimates = estimatesToTest.cloneWithUrl(resourceURL)
 

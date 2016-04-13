@@ -1,10 +1,9 @@
-package au.id.tmm.estimatesqon.controller
+package au.id.tmm.estimatesqon.controller.scraping
 
-import java.time.{Month, LocalDate}
+import java.time.{LocalDate, Month}
 
+import au.id.tmm.estimatesqon.controller.TestResources
 import au.id.tmm.estimatesqon.model.ExampleEstimates
-
-import scala.io.Source
 
 class AttorneyGeneralsEstimatesScraperSpec extends AbstractEstimatesScraperSpec(
   estimatesToTest = ExampleEstimates.AG_2015_BUDGET,
