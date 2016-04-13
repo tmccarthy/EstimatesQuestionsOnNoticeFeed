@@ -3,6 +3,7 @@ package au.id.tmm.estimatesqon.controller
 import java.net.URL
 import java.time.{Duration, Instant}
 
+import au.id.tmm.estimatesqon.controller.scraping.EstimatesScraperImpl
 import au.id.tmm.estimatesqon.model.{Answer, Estimates}
 import org.scalatest.{FlatSpec, GivenWhenThen}
 
@@ -19,7 +20,7 @@ private[controller] abstract class AbstractEstimatesScraperSpec protected (val e
 
   val expectedTimestamp = Instant.now()
 
-  val scrapedAnswers: List[Answer] = EstimatesScraper.scrapeFrom(estimates)
+  val scrapedAnswers: List[Answer] = EstimatesScraperImpl.scrapeFrom(estimates)
 
   s"The set of answers extracted from the $estimatesTestDescription" should s"have $expectedNumAnswers answers" in {
     assert(scrapedAnswers.size === expectedNumAnswers)

@@ -1,4 +1,4 @@
-package au.id.tmm.estimatesqon.controller
+package au.id.tmm.estimatesqon.controller.scraping
 
 import java.time.Instant
 
@@ -12,7 +12,7 @@ import org.jsoup.select.Elements
 
 import scala.io.Source
 
-object EstimatesScraper {
+object EstimatesScraperImpl {
 
   def scrapeFrom(estimates: Estimates): List[Answer] = {
     val timestamp = Instant.now()
@@ -28,7 +28,7 @@ object EstimatesScraper {
     answers.getOrElse(List.empty)
   }
 
-  def retrieveEstimatesPage(estimates: Estimates): Document = {
+  private def retrieveEstimatesPage(estimates: Estimates): Document = {
     val pageSource: Source = Source.fromURL(estimates.pageURL)
     val htmlAsString: String = pageSource.getLines().fold("")((left, right) => left + "\n" + right)
 
@@ -54,7 +54,7 @@ object EstimatesScraper {
     questionsOnNoticeTable
   }
 
-  def extractRowsFrom(questionsOnNoticeTable: Element): Elements = questionsOnNoticeTable.children.first.children
+  private def extractRowsFrom(questionsOnNoticeTable: Element): Elements = questionsOnNoticeTable.children.first.children
 
   private def answersFromTableRows(tableRows: Elements, timestamp: Instant, estimates: Estimates): List[Answer] = {
     val headerRow: Element = tableRows.head

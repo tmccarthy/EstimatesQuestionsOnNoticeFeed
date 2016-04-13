@@ -1,4 +1,4 @@
-package au.id.tmm.estimatesqon.controller
+package au.id.tmm.estimatesqon.controller.scraping
 
 import java.net.URL
 import java.time.LocalDate
@@ -10,7 +10,7 @@ import au.id.tmm.estimatesqon.utils.StringUtils._
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import org.jsoup.nodes.Element
 
-private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
+private [scraping] class AnswerColumnInfo protected (val qonNumberCol: Option[Int],
                                                        val divisionOrAgencyCol: Option[Int],
                                                        val senatorCol: Option[Int],
                                                        val topicCol: Option[Int],
@@ -71,7 +71,7 @@ private [controller] class AnswerColumnInfo protected (val qonNumberCol: Option[
     extractCellValue(column)(element => fromString(element.text.trim))(tableRow)
 }
 
-private[controller] object AnswerColumnInfo {
+private[scraping] object AnswerColumnInfo {
 
   def determineFromHeaderRow(headerRowElement: Element): AnswerColumnInfo = {
 

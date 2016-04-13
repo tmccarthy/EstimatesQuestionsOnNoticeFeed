@@ -4,7 +4,8 @@ import java.nio.file.{Files, Paths}
 import java.sql.SQLException
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
-import au.id.tmm.estimatesqon.controller.{EstimatesScraper, TestResources}
+import au.id.tmm.estimatesqon.controller.TestResources
+import au.id.tmm.estimatesqon.controller.scraping.EstimatesScraperImpl
 import au.id.tmm.estimatesqon.model.{AnswerUpdate, AnswerUpdateBundle, ExampleEstimates}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
@@ -125,7 +126,7 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
     Await.result(dao.registerEstimates(estimates), 30.seconds)
 
     When("an answer update bundle is written")
-    val answers = EstimatesScraper.scrapeFrom(estimates).toSet
+    val answers = EstimatesScraperImpl.scrapeFrom(estimates).toSet
     val updates = answers.map(AnswerUpdate.forExistingAnswer)
     val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
     Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
@@ -149,7 +150,7 @@ class QuestionsOnNoticeDAOImplSpec extends StandardProjectSpec {
       .cloneWithUrl(TestResources.communications20152016BudgetEstimates)
 
     When("an answer update bundle is written")
-    val answers = EstimatesScraper.scrapeFrom(estimates).toSet
+    val answers = EstimatesScraperImpl.scrapeFrom(estimates).toSet
     val updates = answers.map(AnswerUpdate.forExistingAnswer)
     val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
 

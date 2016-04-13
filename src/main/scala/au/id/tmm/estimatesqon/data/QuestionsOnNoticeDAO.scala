@@ -6,7 +6,7 @@ import scala.concurrent.Future
 
 trait QuestionsOnNoticeDAO {
 
-  private[data] def initialiseIfNeeded(): Future[Unit]
+  def initialiseIfNeeded(): Future[Unit]
 
   def registerEstimates(estimates: Estimates): Future[Unit]
 
