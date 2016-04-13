@@ -1,8 +1,11 @@
 package au.id.tmm.estimatesqon.model
 
 import java.net.URL
-import java.time.{Period, Month, LocalDate}
+import java.time.{LocalDate, Month}
 
+/**
+  * Created by timothy on 13/04/2016.
+  */
 object ExampleEstimates {
 
   val AG_2015_BUDGET: Estimates = Estimates.create(

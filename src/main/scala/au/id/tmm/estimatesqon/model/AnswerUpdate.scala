@@ -79,12 +79,14 @@ object AnswerUpdate {
     }
   }
 
+  // TODO this should be checking on the estimates as well
   private def throwIfDifferentQuestion(oldAnswer: Option[Answer], newAnswer: Option[Answer]) = {
     if (oldAnswer.isDefined && newAnswer.isDefined && oldAnswer.get.hasDifferentQONIdentifierTo(newAnswer.get)) {
       throw new IllegalArgumentException("The answers are to two different questions")
     }
   }
 
+  // TODO this should be checking on the estimates as well
   private def throwIfDifferentEstimates(oldAnswer: Option[Answer], newAnswer: Option[Answer]) = {
     if (oldAnswer.isDefined && newAnswer.isDefined && oldAnswer.get.hasDifferentEstimatesTo(newAnswer.get)) {
       throw new IllegalArgumentException("The answers are for two different estimates")

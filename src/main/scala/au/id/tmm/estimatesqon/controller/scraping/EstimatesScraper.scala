@@ -9,5 +9,5 @@ trait EstimatesScraper {
 }
 
 object EstimatesScraper {
-  def apply: EstimatesScraper = EstimatesScraperImpl
+  def apply(): EstimatesScraper = EstimatesScraperImpl
 }

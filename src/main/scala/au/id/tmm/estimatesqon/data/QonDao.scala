@@ -10,11 +10,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
-class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends QuestionsOnNoticeDAO {
+class QonDao protected(dbConfigName: String) {
 
-  val database = Database.forConfig(dbConfigName)
+  lazy val database = Database.forConfig(dbConfigName)
 
-  override private[data] def initialiseIfNeeded(): Future[Unit] = {
+  private[data] def initialiseIfNeeded(): Future[Unit] = {
     isInitialised.flatMap(alreadyInitialised => if (!alreadyInitialised) initialise() else Future(Unit))
   }
 
@@ -48,7 +48,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     database.run(query.result).map(_.headOption)
   }
 
-  override def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit] = {
+  def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit] = {
     val estimates: Estimates = updateBundle.estimates
 
     lookupRowFor(estimates).flatMap(estimatesRow => {
@@ -98,7 +98,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     (answerRow, pdfs.getOrElse(List.empty))
   }
 
-  override def registerEstimates(estimates: Estimates): Future[Unit] = {
+  def registerEstimates(estimates: Estimates): Future[Unit] = {
     val newRow: EstimatesRow = RowModelConversions.estimatesToDbRow(estimates)
 
     val query = TableQuery[EstimatesTable] += newRow
@@ -106,7 +106,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     database.run(query).map(_ => Unit)
   }
 
-  override def listEstimates: Future[Set[Estimates]] = {
+  def listEstimates: Future[Set[Estimates]] = {
     val query = TableQuery[EstimatesTable]
 
     val rowsFuture: Future[Seq[EstimatesRow]] = database.run(query.result)
@@ -114,7 +114,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     rowsFuture.map(_.map(RowModelConversions.estimatesFromDbRow).toSet)
   }
 
-  override def haveEverQueried(estimates: Estimates): Future[Boolean] = {
+  def haveEverQueried(estimates: Estimates): Future[Boolean] = {
     val query = TableQuery[AnswersTable]
       .filter(_.joinedEstimates.filter(_.pageURL === estimates.pageURL.toString).exists)
       .exists
@@ -122,7 +122,7 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
     database.run(query.result)
   }
 
-  override def retrieveLatestAnswersFor(estimates: Estimates): Future[Set[Answer]] = {
+  def retrieveLatestAnswersFor(estimates: Estimates): Future[Set[Answer]] = {
     lookupRowFor(estimates).flatMap(estimatesRow => {
 
       if (estimatesRow.isEmpty) {
@@ -153,6 +153,6 @@ class QuestionsOnNoticeDAOImpl protected (dbConfigName: String) extends Question
   }
 }
 
-object QuestionsOnNoticeDAOImpl {
-  def forConfigName(dbConfigName: String): QuestionsOnNoticeDAOImpl = new QuestionsOnNoticeDAOImpl(dbConfigName)
+object QonDao {
+  def forConfigName(dbConfigName: String): QonDao = new QonDao(dbConfigName)
 }
