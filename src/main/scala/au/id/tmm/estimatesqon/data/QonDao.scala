@@ -1,16 +1,17 @@
 package au.id.tmm.estimatesqon.data
 
 import au.id.tmm.estimatesqon.data.databasemodel._
-import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, AnswerUpdateBundle, Estimates}
+import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, Estimates}
 import slick.driver.SQLiteDriver.api._
 import slick.jdbc.meta.MTable
 import slick.lifted.TableQuery
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
-class QonDao protected(dbConfigName: String) {
+private [data] class QonDao protected(dbConfigName: String) {
 
   lazy val database = Database.forConfig(dbConfigName)
 
@@ -48,9 +49,17 @@ class QonDao protected(dbConfigName: String) {
     database.run(query.result).map(_.headOption)
   }
 
-  def writeUpdateBundle(updateBundle: AnswerUpdateBundle): Future[Unit] = {
-    val estimates: Estimates = updateBundle.estimates
+  def writeUpdates(updates: Set[AnswerUpdate]): Future[Unit] = {
+    val writesPerEstimates: Iterable[Future[Unit]] = updates
+      .groupBy(_.estimates)
+      .map {
+        case (estimates, updatesForEstimates) => writeUpdatesForSingleEstimates(estimates, updatesForEstimates)
+      }
 
+    Future.sequence(writesPerEstimates).map(_ => Unit)
+  }
+
+  private def writeUpdatesForSingleEstimates(estimates: Estimates, updates: Set[AnswerUpdate]): Future[Unit] = {
     lookupRowFor(estimates).flatMap(estimatesRow => {
 
       if (estimatesRow.isEmpty) {
@@ -58,7 +67,7 @@ class QonDao protected(dbConfigName: String) {
       }
 
       val estimatesID: Long = estimatesRow.get.estimatesID
-      val (answerRows, pdfLinkRows) = constructRowsToInsertFor(updateBundle, estimatesID)
+      val (answerRows, pdfLinkRows) = constructRowsToInsertFor(updates, estimatesID)
 
       val answerRowsInsert = database.run(TableQuery[AnswersTable] ++= answerRows)
       val pdfLinkRowsInsert = database.run(TableQuery[PDFLinkBundlesTable] ++= pdfLinkRows)
@@ -69,10 +78,9 @@ class QonDao protected(dbConfigName: String) {
     })
   }
 
-  private def constructRowsToInsertFor(updateBundle: AnswerUpdateBundle,
+  private def constructRowsToInsertFor(updates: Set[AnswerUpdate],
                                        estimatesID: Long): (Set[AnswerRow], Set[PDFLinkBundleRow]) = {
-    val rowsToInsert: Set[(AnswerRow, List[PDFLinkBundleRow])] = updateBundle
-      .updates
+    val rowsToInsert: Set[(AnswerRow, List[PDFLinkBundleRow])] = updates
       .zipWithIndex
       .map{
         case(answerUpdate, index) => constructRowsFor(answerUpdate, estimatesID, index)

@@ -1,19 +1,18 @@
-package au.id.tmm.estimatesqon.controller
+package au.id.tmm.estimatesqon.data
 
 import au.id.tmm.estimatesqon.controller.scraping.EstimatesScraper
-import au.id.tmm.estimatesqon.data.QonDao
 import au.id.tmm.estimatesqon.model.{Answer, AnswerUpdate, Estimates}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UpdatesReader protected (val scraper: EstimatesScraper, val dao: QonDao) {
+class Updates protected(private val scraper: EstimatesScraper, private val dao: QonDao) {
 
   // TODO this should really be done with one big db query to get all the most up-to-date answers.
-  def latestUpdatesFromAllEstimates: Future[Map[Estimates, Set[AnswerUpdate]]] = {
+  def retrieveLatestFromAllEstimates: Future[Map[Estimates, Set[AnswerUpdate]]] = {
     dao.listEstimates.flatMap(allEstimates => {
       val estimatesWithAnswers: Set[Future[(Estimates, Set[AnswerUpdate])]] =
-        allEstimates.map(latestUpdatesPairedWithEstimates)
+        allEstimates.map(retrieveLatestPairedWithEstimates)
 
       val sequencedEstimatesWithAnswers: Future[Set[(Estimates, Set[AnswerUpdate])]] =
         Future.sequence(estimatesWithAnswers)
@@ -24,13 +23,13 @@ class UpdatesReader protected (val scraper: EstimatesScraper, val dao: QonDao) {
     })
   }
 
-  def latestUpdatesPairedWithEstimates(singleEstimates: Estimates): Future[(Estimates, Set[AnswerUpdate])] = {
-    val latestUpdates = latestUpdatesFrom(singleEstimates)
+  private def retrieveLatestPairedWithEstimates(singleEstimates: Estimates): Future[(Estimates, Set[AnswerUpdate])] = {
+    val latestUpdates = retrieveLatestFor(singleEstimates)
 
     latestUpdates.map((singleEstimates, _))
   }
 
-  def latestUpdatesFrom(estimates: Estimates): Future[Set[AnswerUpdate]] = {
+  def retrieveLatestFor(estimates: Estimates): Future[Set[AnswerUpdate]] = {
     val previousAnswersFuture = previousAnswersFor(estimates)
     val scrapedAnswersFuture = scrapedAnswersFrom(estimates)
 
@@ -44,7 +43,7 @@ class UpdatesReader protected (val scraper: EstimatesScraper, val dao: QonDao) {
     }
   }
 
-  def scrapedAnswersFrom(estimates: Estimates): Future[Set[Answer]] = Future {
+  private def scrapedAnswersFrom(estimates: Estimates): Future[Set[Answer]] = Future {
     scraper.scrapeFrom(estimates).toSet
   }
 
@@ -58,8 +57,12 @@ class UpdatesReader protected (val scraper: EstimatesScraper, val dao: QonDao) {
       }
     })
   }
+
+  def store(answerUpdates: Set[AnswerUpdate]): Future[Unit] = dao.writeUpdates(answerUpdates)
 }
 
-object UpdatesReader {
-  def using(scraper: EstimatesScraper, dao: QonDao) = new UpdatesReader(scraper, dao)
+object Updates {
+  private [data] def using(scraper: EstimatesScraper, dao: QonDao) = new Updates(scraper, dao)
+
+  def apply() = using(EstimatesScraper(), QonDao.forConfigName("prodDB"))
 }

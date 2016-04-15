@@ -6,7 +6,7 @@ import java.sql.SQLException
 import au.id.tmm.estimatesqon.StandardProjectSpec
 import au.id.tmm.estimatesqon.controller.TestResources
 import au.id.tmm.estimatesqon.controller.scraping.EstimatesScraper
-import au.id.tmm.estimatesqon.model.{AnswerUpdate, AnswerUpdateBundle, ExampleEstimates}
+import au.id.tmm.estimatesqon.model.{AnswerUpdate, ExampleEstimates}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import slick.jdbc.meta.MTable
@@ -128,8 +128,7 @@ class QonDaoSpec extends StandardProjectSpec {
     When("an answer update bundle is written")
     val answers = EstimatesScraper().scrapeFrom(estimates).toSet
     val updates = answers.map(AnswerUpdate.forExistingAnswer)
-    val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
-    Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
+    Await.result(dao.writeUpdates(updates), 30.seconds)
 
     Then("The written answers have the correct details")
     val storedAnswers = Await.result(dao.retrieveLatestAnswersFor(estimates), 30.seconds)
@@ -152,11 +151,10 @@ class QonDaoSpec extends StandardProjectSpec {
     When("an answer update bundle is written")
     val answers = EstimatesScraper().scrapeFrom(estimates).toSet
     val updates = answers.map(AnswerUpdate.forExistingAnswer)
-    val updateBundle = AnswerUpdateBundle.fromUpdates(updates, estimates)
 
     Then("the write should throw")
     val interceptedException = intercept[UnregisteredEstimatesException] {
-      Await.result(dao.writeUpdateBundle(updateBundle), 30.seconds)
+      Await.result(dao.writeUpdates(updates), 30.seconds)
     }
 
     assert(interceptedException.estimates === estimates)
