@@ -1,7 +1,7 @@
 package au.id.tmm.estimatesqon.controller
 
 import au.id.tmm.estimatesqon.StandardProjectSpec
-import au.id.tmm.estimatesqon.controller.twitter.QonTwitterBot
+import au.id.tmm.estimatesqon.controller.twitter.MockableQonTwitterBot
 import au.id.tmm.estimatesqon.data.MockableUpdates
 import au.id.tmm.estimatesqon.model.{AnswerUpdatesForTesting, ExampleEstimates}
 import org.scalamock.scalatest.MockFactory
@@ -14,7 +14,7 @@ class DriverSpec extends StandardProjectSpec with MockFactory {
   behaviour of "a step"
 
   val updates = mock[MockableUpdates]
-  val twitterBot = mock[QonTwitterBot]
+  val twitterBot = mock[MockableQonTwitterBot]
 
   private val latestUpdates = Set(AnswerUpdatesForTesting.forDetailsAltered)
   private val latestUpdatesPerEstimates = Map(ExampleEstimates.COMMUNICATIONS_2015_BUDGET -> latestUpdates)

@@ -11,5 +11,5 @@ object Driver {
     updates.retrieveLatestFromAllEstimates
       .map(_.values.flatten.toSet)
       .flatMap(latestUpdates => updates.store(latestUpdates).map(_ => latestUpdates))
-      .flatMap(twitterBot.tweetAboutEachOf)
+      .map(twitterBot.tweetAboutEachOf)
 }

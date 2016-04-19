@@ -13,6 +13,7 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
 
   "org.slf4j" % "slf4j-simple" % "1.7.19",
+  "com.github.scopt" %% "scopt" % "3.4.0",
 
   "org.twitter4j" % "twitter4j-core" % "4.0.4",
   "com.twitter" % "twitter-text" % "1.13.4",
